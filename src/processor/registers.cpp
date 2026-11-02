@@ -22,10 +22,104 @@ RegisterFile::RegisterFile(QObject *parent) : QObject(parent)
 void RegisterFile::Reset()
 {
     gpr_.fill(0);
-    fpr_.fill(0.0);
+    fpr_.fill(0);
     csr_.fill(0);
+
+    for (auto& reg : vreg_)
+    {
+        reg.fill(0);
+    }
+
+    vector_length_ = 4;
+
     csr_[0x002] = 0b000; // Default: RNE (IEEE 754)
+
     emit registerResetSignal();
+}
+
+void RegisterFile::SetVectorLength(size_t lanes)
+{
+    if (lanes == 0 || lanes > MAX_VECTOR_LANES)
+    {
+        throw std::out_of_range(
+            "Invalid vector length. Supported range: 1-64 lanes."
+        );
+    }
+
+    vector_length_ = lanes;
+}
+
+size_t RegisterFile::GetVectorLength() const
+{
+    return vector_length_;
+}
+
+uint64_t RegisterFile::ReadVectorLane(
+    size_t reg, size_t lane) const
+{
+    if (reg >= NUM_VREG || lane >= vector_length_)
+    {
+        throw std::out_of_range(
+            "Invalid vector register or lane index."
+        );
+    }
+
+    return vreg_[reg][lane];
+}
+
+void RegisterFile::WriteVectorLane(
+    size_t reg, size_t lane, uint64_t value)
+{
+    if (reg >= NUM_VREG || lane >= vector_length_)
+    {
+        throw std::out_of_range(
+            "Invalid vector register or lane index."
+        );
+    }
+
+    vreg_[reg][lane] = value;
+}
+
+std::vector<uint64_t> RegisterFile::ReadVectorRegister(
+    size_t reg) const
+{
+    if (reg >= NUM_VREG)
+    {
+        throw std::out_of_range(
+            "Invalid vector register index."
+        );
+    }
+
+    return std::vector<uint64_t>(
+        vreg_[reg].begin(),
+        vreg_[reg].begin() + vector_length_
+    );
+}
+
+void RegisterFile::WriteVectorRegister(
+    size_t reg,
+    const std::vector<uint64_t>& values)
+{
+    if (reg >= NUM_VREG)
+    {
+        throw std::out_of_range(
+            "Invalid vector register index."
+        );
+    }
+
+    if (values.size() > vector_length_)
+    {
+        throw std::out_of_range(
+            "Vector data exceeds configured vector length."
+        );
+    }
+
+    vreg_[reg].fill(0);
+
+    for (size_t i = 0; i < values.size(); ++i)
+    {
+        vreg_[reg][i] = values[i];
+    }
 }
 
 uint64_t RegisterFile::ReadGpr(size_t reg) const

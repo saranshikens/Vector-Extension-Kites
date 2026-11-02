@@ -23,6 +23,14 @@ class RegisterFile : public QObject
 {
     Q_OBJECT
   private:
+    static constexpr size_t NUM_VREG = 32;
+    static constexpr size_t MAX_VECTOR_LANES = 64;
+
+    std::array<std::array<uint64_t, MAX_VECTOR_LANES>, NUM_VREG>
+        vreg_ = {};
+
+    size_t vector_length_ = 4;
+
     static constexpr size_t NUM_GPR = 32; ///< Number of General-Purpose Registers (GPR).
     static constexpr size_t NUM_FPR = 32; ///< Number of Floating-Point Registers (FPR).
 
@@ -96,6 +104,19 @@ class RegisterFile : public QObject
     [[nodiscard]] std::vector<uint64_t> GetFprValues() const;
 
     void ModifyRegister(const std::string &reg_name, uint64_t value);
+
+    // Vector register configuration
+    void SetVectorLength(size_t lanes);
+    size_t GetVectorLength() const;
+
+    // Vector register access
+    uint64_t ReadVectorLane(size_t reg, size_t lane) const;
+    void WriteVectorLane(size_t reg, size_t lane, uint64_t value);
+
+    // Whole-register access
+    std::vector<uint64_t> ReadVectorRegister(size_t reg) const;
+    void WriteVectorRegister(size_t reg,
+                            const std::vector<uint64_t>& values);
 
   signals:
     void updateRegister(size_t regIndex, uint64_t value);
