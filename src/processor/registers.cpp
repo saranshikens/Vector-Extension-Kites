@@ -183,7 +183,36 @@ std::vector<uint64_t> RegisterFile::GetFprValues() const
 
 void RegisterFile::ModifyRegister(const std::string &reg_name, uint64_t value)
 {
+    // Support vector lane names such as v1.0, v1.1, ..., v31.3.
+    if (!reg_name.empty() && reg_name[0] == 'v')
+    {
+        const size_t dot = reg_name.find('.');
+
+        if (dot == std::string::npos)
+        {
+            throw std::invalid_argument(
+                "Vector register requires a lane index, e.g. v1.0");
+        }
+
+        const size_t reg_index =
+            std::stoul(reg_name.substr(1, dot - 1));
+
+        const size_t lane_index =
+            std::stoul(reg_name.substr(dot + 1));
+
+        if (reg_index >= 32)
+            throw std::invalid_argument("Invalid vector register index");
+
+        if (lane_index >= GetVectorLength())
+            throw std::invalid_argument("Invalid vector lane index");
+
+        WriteVectorLane(reg_index, lane_index, value);
+        return;
+    }
+
+    // Preserve existing scalar, floating-point and CSR behavior.
     std::string reg_name_n = reg_alias_to_name.at(reg_name);
+
     if (IsValidGeneralPurposeRegister(reg_name_n))
     {
         WriteGpr(std::stoi(reg_name_n.substr(1)), value);
