@@ -211,6 +211,18 @@ void RV5StageProcessorHNF::pipeline_fetch()
 
 void RV5StageProcessorHNF::pipeline_execute()
 {
+    // Clear vector control/result fields before processing this instruction.
+    ex_mem_reg_.vector_result.clear();
+    ex_mem_reg_.vector_store_data.clear();
+    ex_mem_reg_.vrd = 0;
+    ex_mem_reg_.vreg_write = false;
+    ex_mem_reg_.vector_load = false;
+    ex_mem_reg_.vector_store = false;
+
+    // Execute vector instructions through the shared implementation.
+    if (pipeline_execute_vector())
+        return;
+
     uint32_t cur_instruction = id_ex_reg_.instruction;
     const bool is_f_instruction = instruction_set::isFInstruction(cur_instruction);
     const bool is_d_instruction = instruction_set::isDInstruction(cur_instruction);

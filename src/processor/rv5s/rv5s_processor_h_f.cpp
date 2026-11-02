@@ -278,6 +278,18 @@ void RV5StageProcessorHF::pipeline_fetch()
 
 void RV5StageProcessorHF::pipeline_execute()
 {
+    // Clear vector control/result fields before processing this instruction.
+    ex_mem_reg_.vector_result.clear();
+    ex_mem_reg_.vector_store_data.clear();
+    ex_mem_reg_.vrd = 0;
+    ex_mem_reg_.vreg_write = false;
+    ex_mem_reg_.vector_load = false;
+    ex_mem_reg_.vector_store = false;
+
+    // Execute vector instructions through the shared implementation.
+    if (pipeline_execute_vector())
+        return;
+
     uint32_t instruction = id_ex_reg_.instruction;
     bool overflow;
     uint64_t alu_result;

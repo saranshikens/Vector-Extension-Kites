@@ -314,6 +314,100 @@ void RV5StageVM_Base::pipeline_decode()
     }
 }
 
+bool RV5StageVM_Base::pipeline_execute_vector()
+{
+    const uint32_t instruction = id_ex_reg_.instruction;
+
+    // Handle vector configuration.
+    if (vector_isa::isVectorConfiguration(instruction))
+    {
+        size_t requested_length =
+            static_cast<size_t>(id_ex_reg_.reg1_data);
+
+        // In this initial implementation, AVL=0 selects the maximum
+        // supported vector length.
+        if (requested_length == 0 || requested_length > 64)
+            requested_length = 64;
+
+        registers_.SetVectorLength(requested_length);
+
+        // Vector configuration does not write a vector register.
+        ex_mem_reg_.pc = id_ex_reg_.pc;
+        ex_mem_reg_.instruction = instruction;
+        ex_mem_reg_.reg_write = false;
+        ex_mem_reg_.freg_write = false;
+        ex_mem_reg_.mem_read = false;
+        ex_mem_reg_.mem_write = false;
+        ex_mem_reg_.mem_to_reg = false;
+        ex_mem_reg_.vreg_write = false;
+
+        return true;
+    }
+
+    // Only vector arithmetic is handled here.
+    if (!vector_isa::isVectorArithmetic(instruction))
+        return false;
+
+    const auto operation = vector_isa::decodeArithmetic(instruction);
+
+    // Prevent unsupported vector arithmetic encodings from
+    // falling through to the scalar ALU.
+    if (operation == vector_isa::VectorOperation::INVALID)
+    {
+        ex_mem_reg_.pc = id_ex_reg_.pc;
+        ex_mem_reg_.instruction = instruction;
+        ex_mem_reg_.reg_write = false;
+        ex_mem_reg_.freg_write = false;
+        ex_mem_reg_.vreg_write = false;
+        return true;
+    }
+
+    const size_t vector_length = registers_.GetVectorLength();
+
+    const auto &source1 = id_ex_reg_.vreg1_data;
+    const auto &source2 = id_ex_reg_.vreg2_data;
+
+    std::vector<uint64_t> result(vector_length, 0);
+
+    for (size_t lane = 0; lane < vector_length; ++lane)
+    {
+        switch (operation)
+        {
+        case vector_isa::VectorOperation::ADD:
+            result[lane] = source1.at(lane) + source2.at(lane);
+            break;
+
+        case vector_isa::VectorOperation::SUB:
+            result[lane] = source1.at(lane) - source2.at(lane);
+            break;
+
+        case vector_isa::VectorOperation::MUL:
+            result[lane] = source1.at(lane) * source2.at(lane);
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    // Pass the vector result to EX/MEM.
+    ex_mem_reg_.pc = id_ex_reg_.pc;
+    ex_mem_reg_.instruction = instruction;
+
+    ex_mem_reg_.vector_result = result;
+    ex_mem_reg_.vrd = id_ex_reg_.vrd;
+    ex_mem_reg_.vreg_write = true;
+
+    // Disable scalar and memory write paths for this instruction.
+    ex_mem_reg_.reg_write = false;
+    ex_mem_reg_.freg_write = false;
+    ex_mem_reg_.mem_read = false;
+    ex_mem_reg_.mem_write = false;
+    ex_mem_reg_.mem_to_reg = false;
+
+    return true;
+}
+
 void RV5StageVM_Base::memory_writeback()
 {
     auto read_bytes = [&](uint64_t addr, size_t byte_count)
@@ -525,6 +619,10 @@ void RV5StageVM_Base::pipeline_memory()
     mem_wb_reg_.rd          = ex_mem_reg_.rd;
     mem_wb_reg_.reg_write   = ex_mem_reg_.reg_write;
     mem_wb_reg_.mem_to_reg  = ex_mem_reg_.mem_to_reg;
+    // Pass vector result through the MEM/WB pipeline register.
+    mem_wb_reg_.vector_result = ex_mem_reg_.vector_result;
+    mem_wb_reg_.vrd = ex_mem_reg_.vrd;
+    mem_wb_reg_.vreg_write = ex_mem_reg_.vreg_write;
     // Latch FPR fields from EX/MEM
     mem_wb_reg_.frd          = ex_mem_reg_.frd;
     mem_wb_reg_.f_alu_result = ex_mem_reg_.f_alu_result;
@@ -649,6 +747,17 @@ void RV5StageVM_Base::pipeline_writeback()
     if (mem_wb_reg_.pc != INVALID_PC)
     {
         instructions_retired_++;
+    }
+
+    // Vector register write-back.
+    if (mem_wb_reg_.vreg_write)
+    {
+        registers_.WriteVectorRegister(
+            mem_wb_reg_.vrd,
+            mem_wb_reg_.vector_result
+        );
+
+        return;
     }
 
     if (!mem_wb_reg_.reg_write)

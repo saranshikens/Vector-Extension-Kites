@@ -85,6 +85,7 @@ class RV5StageVM_Base : public ProcessorBase
     void fetch_and_advance_pc(bool stalled);
 
     void pipeline_decode();
+    bool pipeline_execute_vector();
 
     virtual void pipeline_execute() = 0;
     virtual uint64_t pipeline_execute_float() = 0;

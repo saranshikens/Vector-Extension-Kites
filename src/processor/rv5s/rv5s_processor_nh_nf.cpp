@@ -195,6 +195,18 @@ void RV5StageProcessorNHNF::pipeline_fetch()
 
 void RV5StageProcessorNHNF::pipeline_execute()
 {
+    // Clear vector control/result fields before processing this instruction.
+    ex_mem_reg_.vector_result.clear();
+    ex_mem_reg_.vector_store_data.clear();
+    ex_mem_reg_.vrd = 0;
+    ex_mem_reg_.vreg_write = false;
+    ex_mem_reg_.vector_load = false;
+    ex_mem_reg_.vector_store = false;
+
+    // Execute vector instructions through the shared implementation.
+    if (pipeline_execute_vector())
+        return;
+
     uint32_t instruction = id_ex_reg_.instruction;
     uint8_t opcode = instruction & 0b1111111;
     uint8_t funct3 = (instruction >> 12) & 0x7;
