@@ -318,6 +318,52 @@ bool RV5StageVM_Base::pipeline_execute_vector()
 {
     const uint32_t instruction = id_ex_reg_.instruction;
 
+        const bool is_vector_config =
+        vector_isa::isVectorConfiguration(instruction);
+
+    const bool is_vector_arithmetic =
+        vector_isa::isVectorArithmetic(instruction);
+
+    // This function currently handles only configuration and arithmetic.
+    if (!is_vector_config && !is_vector_arithmetic)
+        return false;
+
+    // Preserve previous-cycle information used by the existing pipeline.
+    ex_mem_reg_.prev_reg_write = ex_mem_reg_.reg_write;
+    ex_mem_reg_.prev_rd = ex_mem_reg_.rd;
+    ex_mem_reg_.prev_freg_write = ex_mem_reg_.freg_write;
+    ex_mem_reg_.prev_frd = ex_mem_reg_.frd;
+    ex_mem_reg_.prev_mem_read = ex_mem_reg_.mem_read;
+    ex_mem_reg_.prev_mem_write = ex_mem_reg_.mem_write;
+
+    // Initialize every EX/MEM field that a normal EX instruction would set.
+    ex_mem_reg_.pc = id_ex_reg_.pc;
+    ex_mem_reg_.instruction = instruction;
+
+    ex_mem_reg_.alu_result = 0;
+    ex_mem_reg_.f_alu_result = 0;
+    ex_mem_reg_.reg2_data = 0;
+    ex_mem_reg_.freg2_data = 0;
+
+    ex_mem_reg_.rd = 0;
+    ex_mem_reg_.frd = 0;
+
+    ex_mem_reg_.reg_write = false;
+    ex_mem_reg_.freg_write = false;
+    ex_mem_reg_.mem_to_reg = false;
+    ex_mem_reg_.mem_read = false;
+    ex_mem_reg_.mem_write = false;
+
+    ex_mem_reg_.branch_taken = false;
+    ex_mem_reg_.branch_target_pc = 0;
+
+    ex_mem_reg_.vector_result.clear();
+    ex_mem_reg_.vector_store_data.clear();
+    ex_mem_reg_.vrd = 0;
+    ex_mem_reg_.vreg_write = false;
+    ex_mem_reg_.vector_load = false;
+    ex_mem_reg_.vector_store = false;
+
     // Handle vector configuration.
     if (vector_isa::isVectorConfiguration(instruction))
     {
