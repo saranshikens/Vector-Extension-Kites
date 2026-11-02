@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include "processor/processor_constants.h"
+#include <vector>
 namespace Kites
 {
 // --- Data passed from Fetch (IF) to Decode (ID) ---
@@ -51,6 +52,19 @@ struct ID_EX_Register
     uint8_t rs1 {0};  // GPR source 1 index
     uint8_t rs2 {0};  // GPR source 2 index
     uint8_t rd  {0};  // GPR destination index
+    // --- Vector Register Data ---
+    std::vector<uint64_t> vreg1_data {};
+    std::vector<uint64_t> vreg2_data {};
+
+    // --- Vector Register Indices ---
+    uint8_t vrs1 {0};
+    uint8_t vrs2 {0};
+    uint8_t vrd  {0};
+
+    // --- Vector Control Signals ---
+    bool vreg_write {false};
+    bool vector_load {false};
+    bool vector_store {false};
 
     // ignore these not used
     uint8_t frs1 {0};  // FPR source 1 index
@@ -80,6 +94,17 @@ struct ID_EX_Register
         instruction = NOP;
         reg_write   = freg_write = mem_to_reg = mem_read = mem_write = branch = alu_src = false;
         alu_op      = 0;
+
+        vreg1_data.clear();
+        vreg2_data.clear();
+
+        vrs1 = 0;
+        vrs2 = 0;
+        vrd  = 0;
+
+        vreg_write = false;
+        vector_load = false;
+        vector_store = false;
     }
 };
 
@@ -100,6 +125,17 @@ struct EX_MEM_Register
     uint64_t freg2_data   {0};  // Data from frs2, needed for Store instructions
     uint8_t  frd          {0};  // FPR Destination register index
     uint8_t  prev_frd     {0};  // Previous FPR Destination register index (for one cycle delay)
+
+    // --- Vector Results ---
+    std::vector<uint64_t> vector_result {};
+    std::vector<uint64_t> vector_store_data {};
+
+    uint8_t vrd {0};
+
+    bool vreg_write {false};
+    bool vector_load {false};
+    bool vector_store {false};
+
     // Branching info calculated in EX stage
     bool     branch_taken      {false};
     bool     prev_branch_taken {false};  // we'll use this for hightlighting purposes
@@ -145,6 +181,15 @@ struct EX_MEM_Register
         mem_write       = false;
         prev_mem_read   = false;
         prev_mem_write  = false;
+
+        vector_result.clear();
+        vector_store_data.clear();
+
+        vrd = 0;
+
+        vreg_write = false;
+        vector_load = false;
+        vector_store = false;
     }
 };
 
@@ -169,6 +214,12 @@ struct MEM_WB_Register
     uint64_t prev_f_memory_data {0};  // Previous FPR Memory data (for forwarding)
     uint64_t prev_f_alu_result {0};   // Previous FPR ALU
     uint8_t  prev_frd {0};            // Previous FPR Destination register index
+
+    // --- Vector Writeback ---
+    std::vector<uint64_t> vector_result {};
+    uint8_t vrd {0};
+    bool vreg_write {false};
+
     // Control signals passed through
     bool reg_write  {false};  // GPR Write enable
     bool freg_write {false};  // FPR Write enable
@@ -204,6 +255,11 @@ struct MEM_WB_Register
         prev_mem_to_reg = false;
         prev_reg_write  = false;
         prev_freg_write = false;
+
+        vector_result.clear();
+
+        vrd = 0;
+        vreg_write = false;
     }
 };
 }// namespace Kites
