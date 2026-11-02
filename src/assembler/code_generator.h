@@ -244,6 +244,8 @@ printIntermediateCode(const std::vector<std::pair<ICUnit, bool>> &IntermediateCo
  */
 uint32_t generateRTypeMachineCode(const ICUnit &block);
 
+uint32_t generateVectorArithmeticMachineCode(const ICUnit &block);
+
 /**
  * @brief Generates machine code for an I1-type instruction.
  *

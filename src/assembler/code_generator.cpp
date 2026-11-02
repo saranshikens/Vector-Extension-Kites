@@ -14,6 +14,8 @@
 
 namespace Kites
 {
+static bool isVectorArithmeticMnemonic(const std::string &opcode);
+
 std::vector<std::string>
 printIntermediateCode(const std::vector<std::pair<ICUnit, bool>> &IntermediateCode)
 {
@@ -23,7 +25,12 @@ printIntermediateCode(const std::vector<std::pair<ICUnit, bool>> &IntermediateCo
         const ICUnit &block = pair.first;
         std::string code;
 
-        if (instruction_set::isValidRTypeInstruction(block.getOpcode()))
+        if (isVectorArithmeticMnemonic(block.getOpcode()))
+        {
+            code = block.getOpcode() + " " + block.getRd() + " " +
+                block.getRs1() + " " + block.getRs2();
+        }
+        else if (instruction_set::isValidRTypeInstruction(block.getOpcode()))
         {
             code = block.getOpcode() + " " + block.getRd() + " " + block.getRs1() + " " +
                    block.getRs2();
@@ -65,6 +72,53 @@ printIntermediateCode(const std::vector<std::pair<ICUnit, bool>> &IntermediateCo
 static inline uint32_t extractRegisterIndex(const std::string &reg)
 {
     return static_cast<uint32_t>(std::stoi(reg.substr(1)));
+}
+
+static bool isVectorArithmeticMnemonic(const std::string &opcode)
+{
+    return opcode == "vadd.vv" ||
+           opcode == "vsub.vv" ||
+           opcode == "vmul.vv";
+}
+
+uint32_t generateVectorArithmeticMachineCode(const ICUnit &block)
+{
+    const uint32_t vd  = extractRegisterIndex(block.getRd());
+    const uint32_t vs1 = extractRegisterIndex(block.getRs1());
+    const uint32_t vs2 = extractRegisterIndex(block.getRs2());
+
+    uint32_t funct6 = 0;
+
+    if (block.getOpcode() == "vadd.vv")
+    {
+        funct6 = 0b000000;
+    }
+    else if (block.getOpcode() == "vsub.vv")
+    {
+        funct6 = 0b000010;
+    }
+    else if (block.getOpcode() == "vmul.vv")
+    {
+        funct6 = 0b100101;
+    }
+    else
+    {
+        throw std::runtime_error(
+            "Unsupported vector arithmetic instruction: " + block.getOpcode());
+    }
+
+    constexpr uint32_t opcode = 0x57;
+    constexpr uint32_t funct3 = 0b000;
+
+    uint32_t machineCode = 0;
+    machineCode |= (funct6 << 26);
+    machineCode |= (vs2 << 20);
+    machineCode |= (vs1 << 15);
+    machineCode |= (funct3 << 12);
+    machineCode |= (vd << 7);
+    machineCode |= opcode;
+
+    return machineCode;
 }
 
 uint32_t generateRTypeMachineCode(const ICUnit &block)
@@ -366,7 +420,12 @@ generateMachineCode(const std::vector<std::pair<ICUnit, bool>> &IntermediateCode
     {
         const ICUnit &block = pair.first;
         uint32_t code;
-        if (instruction_set::isValidRTypeInstruction(block.getOpcode()))
+
+        if (isVectorArithmeticMnemonic(block.getOpcode()))
+        {
+            code = generateVectorArithmeticMachineCode(block);
+        }
+        else if (instruction_set::isValidRTypeInstruction(block.getOpcode()))
         {
             code = generateRTypeMachineCode(block);
         }
