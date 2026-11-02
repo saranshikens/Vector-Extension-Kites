@@ -65,6 +65,7 @@ struct ID_EX_Register
     bool vreg_write {false};
     bool vector_load {false};
     bool vector_store {false};
+    bool vector_config {false};
 
     // ignore these not used
     uint8_t frs1 {0};  // FPR source 1 index
@@ -105,6 +106,7 @@ struct ID_EX_Register
         vreg_write = false;
         vector_load = false;
         vector_store = false;
+        vector_config = false;
     }
 };
 

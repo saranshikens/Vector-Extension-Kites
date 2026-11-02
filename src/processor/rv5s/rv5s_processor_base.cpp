@@ -1,6 +1,7 @@
 #include "common/debug_colors.h"
 #include "common/instructions.h"
 #include "processor/rv5s/rv5s_processor_base.h"
+#include "processor/vector_isa.h"
 #include <thread>
 
 namespace Kites
@@ -193,6 +194,18 @@ void RV5StageVM_Base::pipeline_decode()
         id_ex_reg_.mem_write  = false;
         id_ex_reg_.mem_to_reg = false;
         id_ex_reg_.alu_op     = 0;
+
+        id_ex_reg_.vreg1_data.clear();
+        id_ex_reg_.vreg2_data.clear();
+
+        id_ex_reg_.vrs1 = 0;
+        id_ex_reg_.vrs2 = 0;
+        id_ex_reg_.vrd = 0;
+
+        id_ex_reg_.vreg_write = false;
+        id_ex_reg_.vector_load = false;
+        id_ex_reg_.vector_store = false;
+        id_ex_reg_.vector_config = false;
         return;
     }
     // Control Unit: Generate signals based on the instruction
@@ -241,6 +254,64 @@ void RV5StageVM_Base::pipeline_decode()
     id_ex_reg_.mem_write  = control_unit_.GetMemWrite();
     id_ex_reg_.mem_to_reg = control_unit_.GetMemToReg();
     id_ex_reg_.alu_op     = control_unit_.GetAluOp();
+
+    // --------------------------------------------------
+    // Vector instruction decoding and operand latching
+    // --------------------------------------------------
+
+    // Clear vector fields to prevent stale pipeline data.
+    id_ex_reg_.vreg1_data.clear();
+    id_ex_reg_.vreg2_data.clear();
+
+    id_ex_reg_.vrs1 = 0;
+    id_ex_reg_.vrs2 = 0;
+    id_ex_reg_.vrd  = 0;
+
+    id_ex_reg_.vreg_write  = false;
+    id_ex_reg_.vector_load = false;
+    id_ex_reg_.vector_store = false;
+    id_ex_reg_.vector_config = false;
+
+    // Extract vector register indices.
+    id_ex_reg_.vrs1 = vector_isa::vs1(instruction);
+    id_ex_reg_.vrs2 = vector_isa::vs2(instruction);
+    id_ex_reg_.vrd  = vector_isa::vd(instruction);
+
+    // Vector arithmetic: vadd, vsub, vmul.
+    if (vector_isa::isVectorArithmetic(instruction))
+    {
+        id_ex_reg_.vreg1_data =
+            registers_.ReadVectorRegister(id_ex_reg_.vrs1);
+
+        id_ex_reg_.vreg2_data =
+            registers_.ReadVectorRegister(id_ex_reg_.vrs2);
+
+        id_ex_reg_.vreg_write = true;
+    }
+
+    // Vector configuration instruction.
+    else if (vector_isa::isVectorConfiguration(instruction))
+    {
+        id_ex_reg_.vector_config = true;
+    }
+
+    // Vector load.
+    else if (vector_isa::isVectorLoad(instruction))
+    {
+        id_ex_reg_.vector_load = true;
+        id_ex_reg_.vreg_write = true;
+    }
+
+    // Vector store.
+    else if (vector_isa::isVectorStore(instruction))
+    {
+        // For vector stores, bits 7-11 identify the source
+        // vector register.
+        id_ex_reg_.vreg1_data =
+            registers_.ReadVectorRegister(id_ex_reg_.vrd);
+
+        id_ex_reg_.vector_store = true;
+    }
 }
 
 void RV5StageVM_Base::memory_writeback()
