@@ -375,7 +375,10 @@ static const std::unordered_set<std::string> valid_instructions = {
     "fld", "fsd", "fmadd.d", "fmsub.d", "fnmsub.d", "fnmadd.d", "fadd.d", "fsub.d", "fmul.d",
     "fdiv.d", "fsqrt.d", "fsgnj.d", "fsgnjn.d", "fsgnjx.d", "fmin.d", "fmax.d", "fcvt.s.d",
     "fcvt.d.s", "feq.d", "flt.d", "fle.d", "fclass.d", "fcvt.w.d", "fcvt.wu.d", "fcvt.d.w",
-    "fcvt.d.wu", "fcvt.l.d", "fcvt.lu.d", "fmv.x.d", "fcvt.d.l", "fcvt.d.lu", "fmv.d.x"
+    "fcvt.d.wu", "fcvt.l.d", "fcvt.lu.d", "fmv.x.d", "fcvt.d.l", "fcvt.d.lu", "fmv.d.x",
+
+    // Vector
+    "vadd.vv", "vsub.vv", "vmul.vv"
 
 };
 
@@ -967,6 +970,11 @@ std::unordered_map<std::string, std::vector<SyntaxType>> instruction_syntax_map 
                                             // from an x (integer) register into an f
                                             // (floating-point) register without conversion
 
+    ///////////////////////////////////////////////////////////////////////////////////
+    {"vadd.vv", {SyntaxType::O_VREG_C_VREG_C_VREG}},
+    {"vsub.vv", {SyntaxType::O_VREG_C_VREG_C_VREG}},
+    {"vmul.vv", {SyntaxType::O_VREG_C_VREG_C_VREG}}
+
 };
 
 bool isValidInstruction(const std::string &instruction)
@@ -1206,6 +1214,7 @@ std::string getExpectedSyntaxes(const std::string &opcode)
         {SyntaxType::O_GPR_C_FPR_C_RM, "<gp-reg>, <fp-reg>, <rm>"},
         {SyntaxType::O_GPR_C_FPR_C_FPR, "<gp-reg>, <fp-reg>, <fp-reg>"},
         {SyntaxType::O_FPR_C_I_LP_GPR_RP, "<fp-reg>, <imm>(<gp-reg>)"},
+        {SyntaxType::O_VREG_C_VREG_C_VREG, "<vec-reg>, <vec-reg>, <vec-reg>"}
     };
 
     std::string syntaxes;
