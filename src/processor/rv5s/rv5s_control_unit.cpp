@@ -4,6 +4,7 @@
  * @author Atharva and Harshit
  */
 #include "processor/rv5s/rv5s_control_unit.h"
+#include "processor/vector_isa.h"
 #include "common/instructions.h" // For instruction encoding maps if needed
 #include "processor/alu.h"
 
