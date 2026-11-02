@@ -7,12 +7,12 @@
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "environment": {
-                "PATH": "D:/Qt/Tools/mingw1310_64/bin;D:/Qt/6.9.2/mingw_64/bin;$penv{PATH}"
+                "PATH": "C:/Qt/Tools/mingw1310_64/bin;C:/Qt/6.9.3/mingw_64/bin;$penv{PATH}"
             },
             "cacheVariables": {
-                "CMAKE_PREFIX_PATH": "D:/Qt/6.9.2/mingw_64/lib/cmake",
-                "CMAKE_C_COMPILER": "D:/Qt/Tools/mingw1310_64/bin/gcc.exe",
-                "CMAKE_CXX_COMPILER": "D:/Qt/Tools/mingw1310_64/bin/g++.exe"
+                "CMAKE_PREFIX_PATH": "C:/Qt/6.9.3/mingw_64/lib/cmake",
+                "CMAKE_C_COMPILER": "C:/Qt/Tools/mingw1310_64/bin/gcc.exe",
+                "CMAKE_CXX_COMPILER": "C:/Qt/Tools/mingw1310_64/bin/g++.exe"
             }
         },
         {
@@ -98,7 +98,7 @@
             "displayName": "Build tests (with coverage)",
             "configurePreset": "coverage",
             "environment": {
-                "PATH": "D:/Qt/Tools/mingw1310_64/bin;D:/Qt/6.9.2/mingw_64/bin;$penv{PATH}"
+                "PATH": "C:/Qt/Tools/mingw1310_64/bin;C:/Qt/6.9.3/mingw_64/bin;$penv{PATH}"
             },
             "targets": ["kites_test_cov"]
         }
@@ -112,7 +112,7 @@
                 "outputOnFailure": true
             },
             "environment": {
-                "PATH": "D:/Qt/Tools/mingw1310_64/bin;D:/Qt/6.9.2/mingw_64/bin;$penv{PATH}"
+                "PATH": "C:/Qt/Tools/mingw1310_64/bin;C:/Qt/6.9.3/mingw_64/bin;$penv{PATH}"
             },
             "filter": {
                 "exclude": {
@@ -128,7 +128,7 @@
                 "outputOnFailure": true
             },
             "environment": {
-                "PATH": "D:/Qt/Tools/mingw1310_64/bin;D:/Qt/6.9.2/mingw_64/bin;$penv{PATH}"
+                "PATH": "C:/Qt/Tools/mingw1310_64/bin;C:/Qt/6.9.3/mingw_64/bin;$penv{PATH}"
             },
             "filter": {
                 "exclude": {
@@ -144,7 +144,7 @@
                 "outputOnFailure": true
             },
             "environment": {
-                "PATH": "D:/Qt/Tools/mingw1310_64/bin;D:/Qt/6.9.2/mingw_64/bin;$penv{PATH}"
+                "PATH": "C:/Qt/Tools/mingw1310_64/bin;C:/Qt/6.9.3/mingw_64/bin;$penv{PATH}"
             },
             "filter": {
                 "include": {
