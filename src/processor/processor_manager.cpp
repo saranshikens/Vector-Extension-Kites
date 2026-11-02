@@ -201,11 +201,9 @@ void ProcessorManager::step()
 {
     try
     {
-        if (!m_currentProcessor->StepAndNotify())
-        {
-            // program finished while stepping, let the run thread exit so the ui resets
-            m_currentProcessor->RequestStop();
-        }
+        // StepAndNotify() returns false when the pipeline has finished.
+        // Do not call RequestStop() here: RequestStop() also resets the VM.
+        m_currentProcessor->StepAndNotify();
     }
     catch (const std::exception &e)
     {
