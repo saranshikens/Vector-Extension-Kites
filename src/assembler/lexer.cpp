@@ -134,6 +134,30 @@ Token Lexer::identifier()
     {
         return {TokenType::FP_REGISTER, value, line_number_, start_column};
     }
+    // Recognize vector registers v0-v31.
+    if (value.size() >= 2 && value[0] == 'v')
+    {
+        bool valid_vector_register = true;
+
+        for (size_t i = 1; i < value.size(); ++i)
+        {
+            if (!std::isdigit(static_cast<unsigned char>(value[i])))
+            {
+                valid_vector_register = false;
+                break;
+            }
+        }
+
+        if (valid_vector_register)
+        {
+            const int register_number = std::stoi(value.substr(1));
+
+            if (register_number >= 0 && register_number <= 31)
+            {
+                return {TokenType::VEC_REGISTER, value, line_number_, start_column};
+            }
+        }
+    }
     if (IsValidCsr(value))
     {
         return {TokenType::CSR_REGISTER, value, line_number_, start_column};
