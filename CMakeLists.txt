@@ -8,7 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # This works for Harshit
 # set( CMAKE_PREFIX_PATH "D:/QT/6.9.2/mingw_64/lib/cmake")
 # set(MINGW_PATH "D:/Qt/Tools/mingw1310_64")
-find_package(Qt6 6.9.2 REQUIRED COMPONENTS Core Widgets Network Concurrent)
+find_package(Qt6 6.9.3 REQUIRED COMPONENTS Core Widgets Network Concurrent)
 
 # This works for Atharva
 # set(CMAKE_PREFIX_PATH "/home/atharv/Qt/6.10.0/gcc_64")
@@ -62,49 +62,42 @@ if(WIN32)
     set(APP_RESOURCES ${APP_RESOURCES} resources/icons/app_icon.rc)
 endif()
 
-add_library(kites_core STATIC
+
+# CLI-specific core library: excludes GUI initialization.
+add_library(kites_core_cli STATIC
     ${HEADER_FILES}
     ${SRC_FILES}
     ${UI_FILES}
 )
 
-target_include_directories(kites_core PUBLIC
+target_include_directories(kites_core_cli PUBLIC
     "${PROJECT_BINARY_DIR}/${PROJECT_NAME}_autogen/include"
     ${SRC_DIR}
     ${EXTERNAL_DIR}/lua-5.5.0/src
 )
 
-target_link_libraries(kites_core
+target_link_libraries(kites_core_cli
     Qt::Core
     Qt::Widgets
     Qt::Network
     Qt::Concurrent
 )
 
+target_compile_definitions(kites_core_cli PRIVATE DISABLE_GUI)
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(kites_core PRIVATE 
-        -Wall 
-        -Wextra 
-        -pedantic 
-        -frounding-math 
-        -ffloat-store 
+    target_compile_options(kites_core_cli PRIVATE
+        -Wall
+        -Wextra
+        -pedantic
+        -frounding-math
+        -ffloat-store
     )
 endif()
 
 if(LOG_PANEL)
-    target_compile_definitions(kites_core PRIVATE LOG_PANEL)
+    target_compile_definitions(kites_core_cli PRIVATE LOG_PANEL)
 endif()
-
-if(DISABLE_GUI)
-    target_compile_definitions(kites_core PRIVATE DISABLE_GUI)
-endif()
-
-target_precompile_headers(kites_core PRIVATE
-    # <cstdint>
-    # <string>
-    # <array>
-    # <vector>
-)
 
 #Main application executable
 qt_add_executable(${PROJECT_NAME}
@@ -126,7 +119,7 @@ install(TARGETS ${PROJECT_NAME}
 # Command-line executable (no GUI/QApplication dependency at runtime).
 add_executable(kites_cli cli/main.cpp cli/repl.cpp)
 set_target_properties(kites_cli PROPERTIES OUTPUT_NAME "kites-cli")
-target_link_libraries(kites_cli PRIVATE kites_core)
+target_link_libraries(kites_cli PRIVATE kites_core_cli)
 target_compile_definitions(kites_cli PRIVATE DISABLE_GUI)
 
 install(TARGETS kites_cli

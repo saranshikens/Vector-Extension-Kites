@@ -38,6 +38,23 @@ void PrintRegisters(std::ostream &os, RegisterFile &registers)
            << std::setfill('0') << fpr[i] << std::dec << std::setfill(' ') << "\n";
     }
 
+    os << "Vector registers:\n";
+
+    for (size_t i = 0; i < 32; ++i)
+    {
+        os << "  v" << std::left << std::setw(2) << i << " = ";
+
+        for (size_t lane = 0; lane < registers.GetVectorLength(); ++lane)
+        {
+            os << registers.ReadVectorLane(i, lane);
+
+            if (lane + 1 < registers.GetVectorLength())
+                os << ", ";
+        }
+
+        os << "\n";
+    }
+
     os << "Control and status registers:\n";
     for (const auto &[name, address] : csr_to_address)
     {
