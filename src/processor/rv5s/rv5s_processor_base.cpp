@@ -16,9 +16,11 @@ void RV5StageVM_Base::Run()
             last_breakpoint_pc_.reset();
         }
 
-        // if we hit a break point (and it's a new PC), we pause execution
-        // This prevents firing the same breakpoint multiple times during stalls
-        if (std::find(breakpoints_.begin(), breakpoints_.end(), program_counter_) !=
+        // Breakpoints are valid only for real instructions. LoadProgram() also
+        // stores program_size_ as an internal end-of-program address; pausing
+        // there prevents Run() from draining the remaining pipeline stages.
+        if (program_counter_ < program_size_ &&
+            std::find(breakpoints_.begin(), breakpoints_.end(), program_counter_) !=
                 breakpoints_.end() && program_counter_ != last_breakpoint_pc_)
         {
             pause_requested_ = true;
@@ -255,6 +257,15 @@ void RV5StageVM_Base::pipeline_decode()
     id_ex_reg_.mem_to_reg = control_unit_.GetMemToReg();
     id_ex_reg_.alu_op     = control_unit_.GetAluOp();
 
+    // Vector loads/stores use a GPR base address. Their opcodes overlap
+    // the scalar floating-point load/store opcodes, so the generic FP
+    // classification above may have skipped reading rs1 as a GPR.
+    if (vector_isa::isVectorLoad(instruction) ||
+        vector_isa::isVectorStore(instruction))
+    {
+        id_ex_reg_.reg1_data = registers_.ReadGpr(id_ex_reg_.rs1);
+    }
+
     // --------------------------------------------------
     // Vector instruction decoding and operand latching
     // --------------------------------------------------
@@ -324,9 +335,20 @@ bool RV5StageVM_Base::pipeline_execute_vector()
     const bool is_vector_arithmetic =
         vector_isa::isVectorArithmetic(instruction);
 
-    // This function currently handles only configuration and arithmetic.
-    if (!is_vector_config && !is_vector_arithmetic)
+    const bool is_vector_load =
+        vector_isa::isVectorLoad(instruction);
+
+    const bool is_vector_store =
+        vector_isa::isVectorStore(instruction);
+
+    // Handle vector configuration, arithmetic, loads, and stores.
+    if (!is_vector_config &&
+        !is_vector_arithmetic &&
+        !is_vector_load &&
+        !is_vector_store)
+    {
         return false;
+    }
 
     // Preserve previous-cycle information used by the existing pipeline.
     ex_mem_reg_.prev_reg_write = ex_mem_reg_.reg_write;
@@ -363,6 +385,44 @@ bool RV5StageVM_Base::pipeline_execute_vector()
     ex_mem_reg_.vreg_write = false;
     ex_mem_reg_.vector_load = false;
     ex_mem_reg_.vector_store = false;
+
+    // Vector load: calculate the scalar base address in EX and carry
+    // the destination vector register into the MEM/WB path.
+    if (is_vector_load)
+    {
+        ex_mem_reg_.pc = id_ex_reg_.pc;
+        ex_mem_reg_.instruction = instruction;
+        ex_mem_reg_.alu_result = id_ex_reg_.reg1_data;
+        ex_mem_reg_.vrd = id_ex_reg_.vrd;
+        ex_mem_reg_.vreg_write = true;
+        ex_mem_reg_.vector_load = true;
+
+        ex_mem_reg_.reg_write = false;
+        ex_mem_reg_.freg_write = false;
+        ex_mem_reg_.mem_read = false;
+        ex_mem_reg_.mem_write = false;
+        ex_mem_reg_.mem_to_reg = false;
+        return true;
+    }
+
+    // Vector store: carry the scalar base address and source vector
+    // data into the memory stage.
+    if (is_vector_store)
+    {
+        ex_mem_reg_.pc = id_ex_reg_.pc;
+        ex_mem_reg_.instruction = instruction;
+        ex_mem_reg_.alu_result = id_ex_reg_.reg1_data;
+        ex_mem_reg_.vector_store_data = id_ex_reg_.vreg1_data;
+        ex_mem_reg_.vector_store = true;
+
+        ex_mem_reg_.reg_write = false;
+        ex_mem_reg_.freg_write = false;
+        ex_mem_reg_.mem_read = false;
+        ex_mem_reg_.mem_write = false;
+        ex_mem_reg_.mem_to_reg = false;
+        ex_mem_reg_.vreg_write = false;
+        return true;
+    }
 
     // Handle vector configuration.
     if (vector_isa::isVectorConfiguration(instruction))
@@ -410,18 +470,8 @@ bool RV5StageVM_Base::pipeline_execute_vector()
 
     const size_t vector_length = registers_.GetVectorLength();
 
-    auto source1 = id_ex_reg_.vreg1_data;
-    auto source2 = id_ex_reg_.vreg2_data;
-
-    // Forward the most recently produced vector result from MEM/WB.
-    if (mem_wb_reg_.vreg_write)
-    {
-        if (mem_wb_reg_.vrd == id_ex_reg_.vrs1)
-            source1 = mem_wb_reg_.vector_result;
-
-        if (mem_wb_reg_.vrd == id_ex_reg_.vrs2)
-            source2 = mem_wb_reg_.vector_result;
-    }
+    const auto &source1 = id_ex_reg_.vreg1_data;
+    const auto &source2 = id_ex_reg_.vreg2_data;
 
     std::vector<uint64_t> result(vector_length, 0);
 
@@ -686,6 +736,56 @@ void RV5StageVM_Base::pipeline_memory()
 
     bool is_F_Instruction = instruction_set::isFInstruction(mem_wb_reg_.instruction);
     bool is_D_Instruction = instruction_set::isDInstruction(mem_wb_reg_.instruction);
+
+    // Vector memory operations use the active vector length and 64-bit lanes.
+    // Unit-stride addressing: lane N is at base + N * sizeof(uint64_t).
+    if (ex_mem_reg_.vector_load)
+    {
+        const size_t lane_count = registers_.GetVectorLength();
+        const uint64_t base_address = ex_mem_reg_.alu_result;
+        mem_wb_reg_.vector_result.assign(lane_count, 0);
+
+        for (size_t lane = 0; lane < lane_count; ++lane)
+        {
+            const uint64_t address = base_address + lane * sizeof(uint64_t);
+            mem_wb_reg_.vector_result[lane] =
+                memory_controller_.readDoubleWord(address);
+        }
+
+        mem_wb_reg_.vrd = ex_mem_reg_.vrd;
+        mem_wb_reg_.vreg_write = true;
+    }
+    else if (ex_mem_reg_.vector_store)
+    {
+        const size_t lane_count = std::min(
+            registers_.GetVectorLength(), ex_mem_reg_.vector_store_data.size());
+        const uint64_t base_address = ex_mem_reg_.alu_result;
+
+        auto read_bytes = [&](uint64_t addr, size_t byte_count)
+        {
+            std::vector<uint8_t> bytes;
+            bytes.reserve(byte_count);
+            for (size_t i = 0; i < byte_count; ++i)
+            {
+                bytes.push_back(memory_controller_.peekByte(addr + i));
+            }
+            return bytes;
+        };
+
+        for (size_t lane = 0; lane < lane_count; ++lane)
+        {
+            const uint64_t address = base_address + lane * sizeof(uint64_t);
+            const auto old_bytes = read_bytes(address, sizeof(uint64_t));
+            memory_controller_.writeDoubleWord(address, ex_mem_reg_.vector_store_data[lane]);
+            const auto new_bytes = read_bytes(address, sizeof(uint64_t));
+
+            if (old_bytes != new_bytes)
+            {
+                current_delta_.memory_changes.push_back(
+                    {address, old_bytes, new_bytes});
+            }
+        }
+    }
 
     // Memory Access
     if (ex_mem_reg_.mem_read)
@@ -1063,22 +1163,15 @@ bool RV5StageVM_Base::is_pipeline_drained() const
         return false;
     if (mem_wb_reg_.instruction != NOP)
         return false;
-    // EX/MEM: Check scalar and vector side effects.
-    if (ex_mem_reg_.reg_write ||
-        ex_mem_reg_.mem_read ||
-        ex_mem_reg_.mem_write ||
-        ex_mem_reg_.vreg_write ||
-        ex_mem_reg_.vector_load ||
-        ex_mem_reg_.vector_store)
-    {
+    // EX/MEM: Check for architectural side effects (Reg Write, Mem Read, Mem Write).
+    // A NOP will have all these control signals disabled (false).
+    if (ex_mem_reg_.reg_write || ex_mem_reg_.mem_read || ex_mem_reg_.mem_write ||
+        ex_mem_reg_.vreg_write || ex_mem_reg_.vector_load || ex_mem_reg_.vector_store)
         return false;
-    }
 
-    // MEM/WB: Check scalar and vector register writes.
+    // MEM/WB: Check for final architectural side effect (Reg Write).
     if (mem_wb_reg_.reg_write || mem_wb_reg_.vreg_write)
-    {
         return false;
-    }
 
     return true;
 }

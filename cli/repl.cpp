@@ -26,7 +26,7 @@ void PrintRegisters(std::ostream &os, RegisterFile &registers)
     os << "General-purpose registers:\n";
     for (size_t i = 0; i < gpr.size(); ++i)
     {
-        os << "  x" << std::left << std::setw(3) << i << " = 0x" << std::hex << std::setw(16)
+        os << "  x" << std::left << std::setw(3) << i << " = 0x" << std::right << std::hex << std::setw(16)
            << std::setfill('0') << gpr[i] << std::dec << std::setfill(' ') << "\n";
     }
 
@@ -34,7 +34,7 @@ void PrintRegisters(std::ostream &os, RegisterFile &registers)
     os << "Floating-point registers:\n";
     for (size_t i = 0; i < fpr.size(); ++i)
     {
-        os << "  f" << std::left << std::setw(3) << i << " = 0x" << std::hex << std::setw(16)
+        os << "  f" << std::left << std::setw(3) << i << " = 0x" << std::right << std::hex << std::setw(16)
            << std::setfill('0') << fpr[i] << std::dec << std::setfill(' ') << "\n";
     }
 
@@ -58,7 +58,7 @@ void PrintRegisters(std::ostream &os, RegisterFile &registers)
     os << "Control and status registers:\n";
     for (const auto &[name, address] : csr_to_address)
     {
-        os << "  " << std::left << std::setw(7) << name << " = 0x" << std::hex << std::setw(16)
+        os << "  " << std::left << std::setw(7) << name << " = 0x" << std::right << std::hex << std::setw(16)
            << std::setfill('0') << registers.ReadCsr(address) << std::dec << std::setfill(' ')
            << "\n";
     }

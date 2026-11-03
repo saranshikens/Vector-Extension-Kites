@@ -268,7 +268,7 @@ void MainMemory::writeDouble(uint64_t address, double value)
 void MainMemory::printMemory(const uint64_t address, unsigned int rows)
 {
     constexpr size_t bytes_per_row = 8; // One row equals 64 bytes
-    std::cout << "Memory Dump at Address: 0x" << std::hex << address << std::dec << "\n";
+    std::cout << "Memory Dump at Address: 0x" << std::right << std::hex << address << std::dec << "\n";
     std::cout << "-----------------------------------------------------------------\n";
     for (uint64_t i = 0; i < rows; ++i)
     {
@@ -277,7 +277,7 @@ void MainMemory::printMemory(const uint64_t address, unsigned int rows)
         {
             break;
         }
-        std::cout << "0x" << std::hex << std::setw(16) << std::setfill('0') << current_address
+        std::cout << std::right << "0x" << std::hex << std::setw(16) << std::setfill('0') << current_address
                   << " | ";
         for (size_t j = 0; j < bytes_per_row; ++j)
         {
@@ -288,7 +288,7 @@ void MainMemory::printMemory(const uint64_t address, unsigned int rows)
             std::cout << std::hex << std::setw(2) << std::setfill('0')
                       << static_cast<int>(read(current_address + j)) << " ";
         }
-        std::cout << "| 0x" << std::hex << std::setw(16) << std::setfill('0')
+        std::cout << "| 0x" << std::right << std::hex << std::setw(16) << std::setfill('0')
                   << static_cast<int64_t>(readDoubleWord(current_address));
         std::cout << std::dec << std::setfill(' ') << "\n";
     }
