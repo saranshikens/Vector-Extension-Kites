@@ -321,5 +321,7 @@ uint32_t generateFDSTypeMachineCode(const ICUnit &block);
  */
 std::vector<uint32_t>
 generateMachineCode(const std::vector<std::pair<ICUnit, bool>> &IntermediateCode);
+
+uint32_t generateVectorMemoryMachineCode(const ICUnit &block);
 } // namespace Kites
 #endif // CODE_GENERATOR_H

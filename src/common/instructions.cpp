@@ -378,7 +378,7 @@ static const std::unordered_set<std::string> valid_instructions = {
     "fcvt.d.wu", "fcvt.l.d", "fcvt.lu.d", "fmv.x.d", "fcvt.d.l", "fcvt.d.lu", "fmv.d.x",
 
     // Vector
-    "vadd.vv", "vsub.vv", "vmul.vv"
+    "vadd.vv", "vsub.vv", "vmul.vv", "vle64.v", "vse64.v"
 
 };
 
@@ -973,7 +973,9 @@ std::unordered_map<std::string, std::vector<SyntaxType>> instruction_syntax_map 
     ///////////////////////////////////////////////////////////////////////////////////
     {"vadd.vv", {SyntaxType::O_VREG_C_VREG_C_VREG}},
     {"vsub.vv", {SyntaxType::O_VREG_C_VREG_C_VREG}},
-    {"vmul.vv", {SyntaxType::O_VREG_C_VREG_C_VREG}}
+    {"vmul.vv", {SyntaxType::O_VREG_C_VREG_C_VREG}},
+    {"vle64.v", {SyntaxType::O_VREG_C_LP_GPR_RP}},
+    {"vse64.v", {SyntaxType::O_VREG_C_LP_GPR_RP}}
 
 };
 
@@ -1214,7 +1216,8 @@ std::string getExpectedSyntaxes(const std::string &opcode)
         {SyntaxType::O_GPR_C_FPR_C_RM, "<gp-reg>, <fp-reg>, <rm>"},
         {SyntaxType::O_GPR_C_FPR_C_FPR, "<gp-reg>, <fp-reg>, <fp-reg>"},
         {SyntaxType::O_FPR_C_I_LP_GPR_RP, "<fp-reg>, <imm>(<gp-reg>)"},
-        {SyntaxType::O_VREG_C_VREG_C_VREG, "<vec-reg>, <vec-reg>, <vec-reg>"}
+        {SyntaxType::O_VREG_C_VREG_C_VREG, "<vec-reg>, <vec-reg>, <vec-reg>"},
+        {SyntaxType::O_VREG_C_LP_GPR_RP, "<vec-reg>, (<gp-reg>)"}
     };
 
     std::string syntaxes;

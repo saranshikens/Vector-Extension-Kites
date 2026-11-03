@@ -15,6 +15,8 @@
 namespace Kites
 {
 static bool isVectorArithmeticMnemonic(const std::string &opcode);
+static bool isVectorMemoryMnemonic(const std::string &opcode);
+uint32_t generateVectorMemoryMachineCode(const ICUnit &block);
 
 std::vector<std::string>
 printIntermediateCode(const std::vector<std::pair<ICUnit, bool>> &IntermediateCode)
@@ -29,6 +31,11 @@ printIntermediateCode(const std::vector<std::pair<ICUnit, bool>> &IntermediateCo
         {
             code = block.getOpcode() + " " + block.getRd() + " " +
                 block.getRs1() + " " + block.getRs2();
+        }
+        else if (isVectorMemoryMnemonic(block.getOpcode()))
+        {
+            code = block.getOpcode() + " " + block.getRd() +
+                ", (" + block.getRs1() + ")";
         }
         else if (instruction_set::isValidRTypeInstruction(block.getOpcode()))
         {
@@ -117,6 +124,43 @@ uint32_t generateVectorArithmeticMachineCode(const ICUnit &block)
     machineCode |= (funct3 << 12);
     machineCode |= (vd << 7);
     machineCode |= opcode;
+
+    return machineCode;
+}
+
+static bool isVectorMemoryMnemonic(const std::string &opcode)
+{
+    return opcode == "vle64.v" || opcode == "vse64.v";
+}
+
+uint32_t generateVectorMemoryMachineCode(const ICUnit &block)
+{
+    const uint32_t vector_reg = extractRegisterIndex(block.getRd());
+    const uint32_t base_reg = extractRegisterIndex(block.getRs1());
+
+    constexpr uint32_t funct3 = 0b011; // 64-bit elements
+    constexpr uint32_t vm = 1;         // Unmasked operation
+
+    uint32_t machineCode = 0;
+
+    machineCode |= (vm << 25);
+    machineCode |= (base_reg << 15);
+    machineCode |= (funct3 << 12);
+    machineCode |= (vector_reg << 7);
+
+    if (block.getOpcode() == "vle64.v")
+    {
+        machineCode |= 0x07;
+    }
+    else if (block.getOpcode() == "vse64.v")
+    {
+        machineCode |= 0x27;
+    }
+    else
+    {
+        throw std::runtime_error(
+            "Unsupported vector memory instruction: " + block.getOpcode());
+    }
 
     return machineCode;
 }
@@ -424,6 +468,10 @@ generateMachineCode(const std::vector<std::pair<ICUnit, bool>> &IntermediateCode
         if (isVectorArithmeticMnemonic(block.getOpcode()))
         {
             code = generateVectorArithmeticMachineCode(block);
+        }
+        else if (isVectorMemoryMnemonic(block.getOpcode()))
+        {
+            code = generateVectorMemoryMachineCode(block);
         }
         else if (instruction_set::isValidRTypeInstruction(block.getOpcode()))
         {

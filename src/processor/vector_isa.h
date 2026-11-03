@@ -59,13 +59,13 @@ inline bool isVectorConfiguration(uint32_t instruction)
 inline bool isVectorLoad(uint32_t instruction)
 {
     return opcode(instruction) == OPCODE_VECTOR_LOAD &&
-           funct3(instruction) == 0b111;
+           funct3(instruction) == 0b011;
 }
 
 inline bool isVectorStore(uint32_t instruction)
 {
     return opcode(instruction) == OPCODE_VECTOR_STORE &&
-           funct3(instruction) == 0b111;
+           funct3(instruction) == 0b011;
 }
 
 // Supported arithmetic operations
