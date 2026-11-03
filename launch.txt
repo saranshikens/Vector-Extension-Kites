@@ -1,0 +1,2 @@
+cmake --build build/debug --target kites_cli -j 4
+.\build\debug\kites-cli.exe --vm rv5-nh-nf --repl

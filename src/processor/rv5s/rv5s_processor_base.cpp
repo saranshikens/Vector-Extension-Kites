@@ -410,8 +410,18 @@ bool RV5StageVM_Base::pipeline_execute_vector()
 
     const size_t vector_length = registers_.GetVectorLength();
 
-    const auto &source1 = id_ex_reg_.vreg1_data;
-    const auto &source2 = id_ex_reg_.vreg2_data;
+    auto source1 = id_ex_reg_.vreg1_data;
+    auto source2 = id_ex_reg_.vreg2_data;
+
+    // Forward the most recently produced vector result from MEM/WB.
+    if (mem_wb_reg_.vreg_write)
+    {
+        if (mem_wb_reg_.vrd == id_ex_reg_.vrs1)
+            source1 = mem_wb_reg_.vector_result;
+
+        if (mem_wb_reg_.vrd == id_ex_reg_.vrs2)
+            source2 = mem_wb_reg_.vector_result;
+    }
 
     std::vector<uint64_t> result(vector_length, 0);
 
@@ -1053,14 +1063,22 @@ bool RV5StageVM_Base::is_pipeline_drained() const
         return false;
     if (mem_wb_reg_.instruction != NOP)
         return false;
-    // EX/MEM: Check for architectural side effects (Reg Write, Mem Read, Mem Write).
-    // A NOP will have all these control signals disabled (false).
-    if (ex_mem_reg_.reg_write || ex_mem_reg_.mem_read || ex_mem_reg_.mem_write)
+    // EX/MEM: Check scalar and vector side effects.
+    if (ex_mem_reg_.reg_write ||
+        ex_mem_reg_.mem_read ||
+        ex_mem_reg_.mem_write ||
+        ex_mem_reg_.vreg_write ||
+        ex_mem_reg_.vector_load ||
+        ex_mem_reg_.vector_store)
+    {
         return false;
+    }
 
-    // MEM/WB: Check for final architectural side effect (Reg Write).
-    if (mem_wb_reg_.reg_write)
+    // MEM/WB: Check scalar and vector register writes.
+    if (mem_wb_reg_.reg_write || mem_wb_reg_.vreg_write)
+    {
         return false;
+    }
 
     return true;
 }
