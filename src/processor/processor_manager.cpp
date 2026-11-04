@@ -305,7 +305,7 @@ unsigned int ProcessorManager::getBranchMispredictions() const
 
 unsigned int ProcessorManager::getStallCycles() const
 {
-    return m_currentProcessor->stall_cycles_;
+    return m_currentProcessor->total_stall_cycles_;
 }
 
 unsigned int ProcessorManager::getCycles() const

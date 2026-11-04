@@ -70,6 +70,8 @@ struct StepDelta
     unsigned int new_instructions_retired{};
     unsigned int old_stall_cycles{};
     unsigned int new_stall_cycles{};
+    unsigned int old_total_stall_cycles{};
+    unsigned int new_total_stall_cycles{};
     unsigned int old_branch_mispredictions{};
     unsigned int new_branch_mispredictions{};
     std::vector<RegisterChange> register_changes{};
@@ -116,7 +118,10 @@ class ProcessorBase : public QObject
     unsigned int instructions_retired_{};
     double cpi_{};
     double ipc_{};
+    // Countdown used by the hazard unit; do not use as a performance statistic.
     unsigned int stall_cycles_{};
+    // Cumulative number of cycles actually spent stalling.
+    unsigned int total_stall_cycles_{};
     unsigned int branch_mispredictions_{};
 
     std::string output_status_;

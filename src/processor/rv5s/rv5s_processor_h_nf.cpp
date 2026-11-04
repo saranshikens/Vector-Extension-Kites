@@ -211,6 +211,13 @@ void RV5StageProcessorHNF::Step()
         }
     }
 
+    // Count the stall cycle consumed in this Step(), independently of the
+    // countdown value that is retained for hazard-unit control.
+    if (currently_stalling || stalls_needed > 0)
+    {
+        ++total_stall_cycles_;
+    }
+
     if (currently_stalling || stalls_needed > 0)
     {
         id_ex_reg_.reset();

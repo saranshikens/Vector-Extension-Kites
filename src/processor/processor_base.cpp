@@ -359,7 +359,7 @@ void ProcessorBase::DumpState(const std::filesystem::path &filename)
     file << "    \"instructions_retired\": " << instructions_retired_ << ",\n";
     file << "    \"cpi\": " << cpi_ << ",\n";
     file << "    \"ipc\": " << ipc_ << ",\n";
-    file << "    \"stall_cycles\": " << stall_cycles_ << ",\n";
+    file << "    \"stall_cycles\": " << total_stall_cycles_ << ",\n";
     file << "    \"branch_mispredictions\": " << branch_mispredictions_ << ",\n";
     file << "    \"breakpoints\": [";
     for (size_t i = 1; i < breakpoints_.size(); ++i)
