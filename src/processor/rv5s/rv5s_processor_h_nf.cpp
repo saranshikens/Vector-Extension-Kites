@@ -14,6 +14,7 @@
 #include "processor/alu.h"
 #include "processor/pipeline_registers.h"
 #include "processor/processor_base.h"
+#include "processor/vector_isa.h"
 #include <algorithm>
 #include <chrono>
 #include <iostream>
@@ -162,6 +163,48 @@ void RV5StageProcessorHNF::Step()
     else
     {
         stalls_needed = check_data_hazard(if_id_reg_, id_ex_reg_, ex_mem_reg_, false);
+
+        // H/NF has no vector forwarding. Detect vector RAW dependencies from
+        // the instruction encodings in ID/EX and EX/MEM, rather than relying
+        // on vreg_write control bits (which are not consistently retained
+        // across every vector path in this pipeline).
+        const uint32_t consumer = if_id_reg_.instruction;
+        const bool consumer_is_vector_arithmetic =
+            vector_isa::isVectorArithmetic(consumer);
+        const bool consumer_is_vector_store =
+            vector_isa::isVectorStore(consumer);
+
+        if (consumer_is_vector_arithmetic || consumer_is_vector_store)
+        {
+            const uint8_t source_a = consumer_is_vector_store
+                                         ? vector_isa::vd(consumer)
+                                         : vector_isa::vs1(consumer);
+            const uint8_t source_b = consumer_is_vector_arithmetic
+                                         ? vector_isa::vs2(consumer)
+                                         : 0;
+
+            const auto producer_writes_vector = [](uint32_t instruction) {
+                return vector_isa::isVectorArithmetic(instruction) ||
+                       vector_isa::isVectorLoad(instruction);
+            };
+
+            const auto conflicts_with = [&](uint32_t producer) {
+                if (!producer_writes_vector(producer))
+                    return false;
+
+                const uint8_t destination = vector_isa::vd(producer);
+                return destination == source_a ||
+                       (consumer_is_vector_arithmetic && destination == source_b);
+            };
+
+            if (conflicts_with(id_ex_reg_.instruction) ||
+                conflicts_with(ex_mem_reg_.instruction))
+            {
+                // Two bubbles match the existing H/NF GPR interlock policy.
+                stalls_needed = std::max(stalls_needed, 2);
+            }
+        }
+
         if (stalls_needed > 0)
         {
             stall_cycles_ = stalls_needed - 1;
