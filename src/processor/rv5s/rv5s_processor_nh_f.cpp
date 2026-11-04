@@ -249,6 +249,24 @@ void RV5StageProcessorNHF::pipeline_execute()
     }
 
     // Execute vector instructions through the shared implementation.
+    // vsetvli consumes a scalar GPR operand. Forward that operand just as
+    // the scalar execution path does, before shared vector execution.
+    if (vector_isa::isVectorConfiguration(id_ex_reg_.instruction) &&
+        id_ex_reg_.rs1 != 0)
+    {
+        if (ex_mem_reg_.reg_write && ex_mem_reg_.rd == id_ex_reg_.rs1)
+        {
+            id_ex_reg_.reg1_data = ex_mem_reg_.alu_result;
+        }
+        else if (mem_wb_reg_.prev_reg_write &&
+                 mem_wb_reg_.prev_rd == id_ex_reg_.rs1)
+        {
+            id_ex_reg_.reg1_data = mem_wb_reg_.prev_mem_to_reg
+                                       ? mem_wb_reg_.prev_memory_data
+                                       : mem_wb_reg_.prev_alu_result;
+        }
+    }
+
     if (pipeline_execute_vector())
         return;
 

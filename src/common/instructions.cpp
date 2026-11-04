@@ -378,7 +378,7 @@ static const std::unordered_set<std::string> valid_instructions = {
     "fcvt.d.wu", "fcvt.l.d", "fcvt.lu.d", "fmv.x.d", "fcvt.d.l", "fcvt.d.lu", "fmv.d.x",
 
     // Vector
-    "vadd.vv", "vsub.vv", "vmul.vv", "vle64.v", "vse64.v"
+    "vadd.vv", "vsub.vv", "vmul.vv", "vle64.v", "vse64.v", "vsetvli"
 
 };
 
@@ -423,11 +423,11 @@ static const std::unordered_set<std::string> RTypeInstructions = {
 
 static const std::unordered_set<std::string> ITypeInstructions = {
     "addi",  "xori",  "ori", "andi", "slli", "srli", "srai", "slti", "sltiu", "addiw", "slliw",
-    "srliw", "sraiw", "lb",  "lh",   "lw",   "ld",   "lbu",  "lhu",  "lwu",   "jalr"};
+    "srliw", "sraiw", "lb",  "lh",   "lw",   "ld",   "lbu",  "lhu",  "lwu",   "jalr", "vsetvli"};
 
 static const std::unordered_set<std::string> I1TypeInstructions = {
     "addi", "xori", "ori", "andi", "sltiu", "slti", "addiw", "lb",
-    "lh",   "lw",   "ld",  "lbu",  "lhu",   "lwu",  "jalr"};
+    "lh",   "lw",   "ld",  "lbu",  "lhu",   "lwu",  "jalr", "vsetvli"};
 
 static const std::unordered_set<std::string> I2TypeInstructions = {"slli",  "srli",  "srai",
                                                                    "slliw", "srliw", "sraiw"};
@@ -784,6 +784,7 @@ std::unordered_map<std::string, std::vector<SyntaxType>> instruction_syntax_map 
     {"srai", {SyntaxType::O_GPR_C_GPR_C_I}},
     {"slti", {SyntaxType::O_GPR_C_GPR_C_I}},
     {"sltiu", {SyntaxType::O_GPR_C_GPR_C_I}},
+    {"vsetvli", {SyntaxType::O_GPR_C_GPR_C_I}},
 
     {"lb", {SyntaxType::O_GPR_C_I_LP_GPR_RP, SyntaxType::O_GPR_C_DL}},
     {"lh", {SyntaxType::O_GPR_C_I_LP_GPR_RP, SyntaxType::O_GPR_C_DL}},

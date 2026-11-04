@@ -4,6 +4,9 @@
 #include "processor/vector_isa.h"
 #include <thread>
 
+#include <algorithm>
+#include <stdexcept>
+
 namespace Kites
 {
 void RV5StageVM_Base::Run()
@@ -132,6 +135,7 @@ void RV5StageVM_Base::begin_step_delta()
     current_delta_.old_total_stall_cycles    = total_stall_cycles_;
     current_delta_.old_instructions_retired  = instructions_retired_;
     current_delta_.old_branch_mispredictions = branch_mispredictions_;
+    current_delta_.old_vector_length = registers_.GetVectorLength();
 
     current_delta_.pipeline_register_change.old_if_id_reg  = if_id_reg_;
     current_delta_.pipeline_register_change.old_id_ex_reg  = id_ex_reg_;
@@ -147,6 +151,7 @@ void RV5StageVM_Base::finalize_step_delta()
     current_delta_.new_total_stall_cycles    = total_stall_cycles_;
     current_delta_.new_instructions_retired  = instructions_retired_;
     current_delta_.new_branch_mispredictions = branch_mispredictions_;
+    current_delta_.new_vector_length = registers_.GetVectorLength();
 
     current_delta_.pipeline_register_change.new_if_id_reg  = if_id_reg_;
     current_delta_.pipeline_register_change.new_id_ex_reg  = id_ex_reg_;
@@ -307,6 +312,9 @@ void RV5StageVM_Base::pipeline_decode()
     else if (vector_isa::isVectorConfiguration(instruction))
     {
         id_ex_reg_.vector_config = true;
+        // vsetvli writes the selected VL to rd (unless rd=x0), so expose
+        // the dependency to the normal scalar hazard/forwarding machinery.
+        id_ex_reg_.reg_write = (id_ex_reg_.rd != 0);
     }
 
     // Vector load.
@@ -427,29 +435,45 @@ bool RV5StageVM_Base::pipeline_execute_vector()
         return true;
     }
 
-    // Handle vector configuration.
+    // Handle the supported vsetvli subset (e64,m1, unmasked).
     if (vector_isa::isVectorConfiguration(instruction))
     {
-        size_t requested_length =
-            static_cast<size_t>(id_ex_reg_.reg1_data);
+        if (!vector_isa::isSupportedVType(instruction))
+        {
+            throw std::runtime_error(
+                "Unsupported vsetvli vtype: this KITES build supports e64,m1 only");
+        }
 
-        // In this initial implementation, AVL=0 selects the maximum
-        // supported vector length.
-        if (requested_length == 0 || requested_length > 64)
-            requested_length = 64;
+        const uint8_t rd = vector_isa::vd(instruction);
+        const uint8_t rs1 = vector_isa::vs1(instruction);
+        const size_t current_vl = registers_.GetVectorLength();
+        const size_t avl = static_cast<size_t>(id_ex_reg_.reg1_data);
+        size_t selected_vl = 0;
 
-        registers_.SetVectorLength(requested_length);
+        // RISC-V AVL selection for vsetvli:
+        // rs1=x0, rd!=x0 => VLMAX; rs1=x0, rd=x0 => keep current VL;
+        // otherwise AVL is x[rs1], including AVL=0.
+        if (rs1 == 0 && rd != 0)
+            selected_vl = vector_isa::MAX_VECTOR_LANES;
+        else if (rs1 == 0 && rd == 0)
+            selected_vl = current_vl;
+        else
+            selected_vl = std::min(avl, vector_isa::MAX_VECTOR_LANES);
 
-        // Vector configuration does not write a vector register.
+        registers_.SetVectorLength(selected_vl);
+
         ex_mem_reg_.pc = id_ex_reg_.pc;
         ex_mem_reg_.instruction = instruction;
-        ex_mem_reg_.reg_write = false;
+        ex_mem_reg_.rd = rd;
+        ex_mem_reg_.alu_result = selected_vl;
+        ex_mem_reg_.reg_write = (rd != 0);
         ex_mem_reg_.freg_write = false;
         ex_mem_reg_.mem_read = false;
         ex_mem_reg_.mem_write = false;
         ex_mem_reg_.mem_to_reg = false;
         ex_mem_reg_.vreg_write = false;
-
+        ex_mem_reg_.vector_load = false;
+        ex_mem_reg_.vector_store = false;
         return true;
     }
 
@@ -984,6 +1008,11 @@ void RV5StageVM_Base::pipeline_writeback()
             registers_.WriteGpr(mem_wb_reg_.rd, write_data);
             break;
         }
+        case 0b1010111:
+        { // Vector configuration (vsetvli) writes selected VL to rd.
+            registers_.WriteGpr(mem_wb_reg_.rd, write_data);
+            break;
+        }
         default:
             break;
         }
@@ -1225,6 +1254,7 @@ void RV5StageVM_Base::Undo()
     stall_cycles_ = last.old_stall_cycles;
     total_stall_cycles_ = last.old_total_stall_cycles;
     branch_mispredictions_ = last.old_branch_mispredictions;
+    registers_.SetVectorLength(last.old_vector_length);
 
     if_id_reg_ = last.pipeline_register_change.old_if_id_reg;
     id_ex_reg_ = last.pipeline_register_change.old_id_ex_reg;
@@ -1286,6 +1316,7 @@ void RV5StageVM_Base::Redo()
     stall_cycles_ = next.new_stall_cycles;
     total_stall_cycles_ = next.new_total_stall_cycles;
     branch_mispredictions_ = next.new_branch_mispredictions;
+    registers_.SetVectorLength(next.new_vector_length);
 
     if_id_reg_ = next.pipeline_register_change.new_if_id_reg;
     id_ex_reg_ = next.pipeline_register_change.new_id_ex_reg;

@@ -24,6 +24,8 @@ struct PipelineRegisterChange
 struct RV5StageStepDelta : public StepDelta
 {
     PipelineRegisterChange pipeline_register_change;
+    size_t old_vector_length {4};
+    size_t new_vector_length {4};
 };
 
 class RV5StageVM_Base : public ProcessorBase

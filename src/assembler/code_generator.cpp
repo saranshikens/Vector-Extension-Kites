@@ -16,6 +16,8 @@ namespace Kites
 {
 static bool isVectorArithmeticMnemonic(const std::string &opcode);
 static bool isVectorMemoryMnemonic(const std::string &opcode);
+static bool isVectorConfigurationMnemonic(const std::string &opcode);
+uint32_t generateVectorConfigurationMachineCode(const ICUnit &block);
 uint32_t generateVectorMemoryMachineCode(const ICUnit &block);
 
 std::vector<std::string>
@@ -27,7 +29,12 @@ printIntermediateCode(const std::vector<std::pair<ICUnit, bool>> &IntermediateCo
         const ICUnit &block = pair.first;
         std::string code;
 
-        if (isVectorArithmeticMnemonic(block.getOpcode()))
+        if (isVectorConfigurationMnemonic(block.getOpcode()))
+        {
+            code = block.getOpcode() + " " + block.getRd() + " " +
+                block.getRs1() + " " + block.getImm();
+        }
+        else if (isVectorArithmeticMnemonic(block.getOpcode()))
         {
             code = block.getOpcode() + " " + block.getRd() + " " +
                 block.getRs1() + " " + block.getRs2();
@@ -79,6 +86,36 @@ printIntermediateCode(const std::vector<std::pair<ICUnit, bool>> &IntermediateCo
 static inline uint32_t extractRegisterIndex(const std::string &reg)
 {
     return static_cast<uint32_t>(std::stoi(reg.substr(1)));
+}
+
+static bool isVectorConfigurationMnemonic(const std::string &opcode)
+{
+    return opcode == "vsetvli";
+}
+
+uint32_t generateVectorConfigurationMachineCode(const ICUnit &block)
+{
+    const uint32_t rd = extractRegisterIndex(block.getRd());
+    const uint32_t rs1 = extractRegisterIndex(block.getRs1());
+    const int64_t vtype = std::stoll(block.getImm());
+
+    // This project currently supports only e64,m1 with tail/mask agnostic
+    // policies disabled: vsew=011, vlmul=000, vta=0, vma=0 (zimm=0x18).
+    if (vtype != 0x18)
+    {
+        throw std::runtime_error(
+            "vsetvli currently supports only vsetvli rd, rs1, 24 (e64,m1)");
+    }
+
+    constexpr uint32_t opcode = 0x57;
+    constexpr uint32_t funct3 = 0b111;
+    uint32_t machineCode = 0;
+    machineCode |= (static_cast<uint32_t>(vtype) & 0x7FF) << 20;
+    machineCode |= (rs1 & 0x1F) << 15;
+    machineCode |= funct3 << 12;
+    machineCode |= (rd & 0x1F) << 7;
+    machineCode |= opcode;
+    return machineCode;
 }
 
 static bool isVectorArithmeticMnemonic(const std::string &opcode)
@@ -465,7 +502,11 @@ generateMachineCode(const std::vector<std::pair<ICUnit, bool>> &IntermediateCode
         const ICUnit &block = pair.first;
         uint32_t code;
 
-        if (isVectorArithmeticMnemonic(block.getOpcode()))
+        if (isVectorConfigurationMnemonic(block.getOpcode()))
+        {
+            code = generateVectorConfigurationMachineCode(block);
+        }
+        else if (isVectorArithmeticMnemonic(block.getOpcode()))
         {
             code = generateVectorArithmeticMachineCode(block);
         }

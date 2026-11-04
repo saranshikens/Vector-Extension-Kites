@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 
 namespace Kites
 {
@@ -11,6 +12,8 @@ namespace vector_isa
 constexpr uint8_t OPCODE_VECTOR       = 0x57;
 constexpr uint8_t OPCODE_VECTOR_LOAD  = 0x07;
 constexpr uint8_t OPCODE_VECTOR_STORE = 0x27;
+constexpr uint8_t VTYPE_E64_M1 = 0x18;
+constexpr size_t MAX_VECTOR_LANES = 64;
 
 // Instruction field extraction
 inline uint8_t opcode(uint32_t instruction)
@@ -54,6 +57,16 @@ inline bool isVectorConfiguration(uint32_t instruction)
 {
     return opcode(instruction) == OPCODE_VECTOR &&
            funct3(instruction) == 0b111;
+}
+
+inline uint16_t vtypeImmediate(uint32_t instruction)
+{
+    return static_cast<uint16_t>((instruction >> 20) & 0x7FF);
+}
+
+inline bool isSupportedVType(uint32_t instruction)
+{
+    return vtypeImmediate(instruction) == VTYPE_E64_M1;
 }
 
 inline bool isVectorLoad(uint32_t instruction)
