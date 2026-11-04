@@ -8,6 +8,7 @@
  * * @author Atharva and Harshit
  */
 #include "processor/rv5s/rv5s_processor_nh_f.h"
+#include "processor/vector_isa.h"
 #include "common/instructions.h"
 #include "config/config.h"
 #include "ui/processor_tab/processor_designs/rv5s_processor_nh_f_circuit_scene.h"
@@ -212,6 +213,40 @@ void RV5StageProcessorNHF::pipeline_execute()
     ex_mem_reg_.vreg_write = false;
     ex_mem_reg_.vector_load = false;
     ex_mem_reg_.vector_store = false;
+
+    // Vector forwarding (NH/F mode).
+    // There is no interlock in this VM, so operands must be refreshed and
+    // bypassed here. Step() runs WB and MEM before EX: register-file refresh
+    // observes values committed by this cycle's WB, while MEM/WB contains the
+    // result produced by the instruction that completed MEM this cycle.
+    const uint32_t vector_instruction = id_ex_reg_.instruction;
+    if (vector_isa::isVectorArithmetic(vector_instruction))
+    {
+        id_ex_reg_.vreg1_data =
+            registers_.ReadVectorRegister(id_ex_reg_.vrs1);
+        id_ex_reg_.vreg2_data =
+            registers_.ReadVectorRegister(id_ex_reg_.vrs2);
+
+        if (mem_wb_reg_.vreg_write)
+        {
+            if (mem_wb_reg_.vrd == id_ex_reg_.vrs1)
+                id_ex_reg_.vreg1_data = mem_wb_reg_.vector_result;
+            if (mem_wb_reg_.vrd == id_ex_reg_.vrs2)
+                id_ex_reg_.vreg2_data = mem_wb_reg_.vector_result;
+        }
+    }
+    else if (vector_isa::isVectorStore(vector_instruction))
+    {
+        // In vector stores, vd bits identify the source vector register.
+        id_ex_reg_.vreg1_data =
+            registers_.ReadVectorRegister(id_ex_reg_.vrd);
+
+        if (mem_wb_reg_.vreg_write &&
+            mem_wb_reg_.vrd == id_ex_reg_.vrd)
+        {
+            id_ex_reg_.vreg1_data = mem_wb_reg_.vector_result;
+        }
+    }
 
     // Execute vector instructions through the shared implementation.
     if (pipeline_execute_vector())
