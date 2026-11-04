@@ -1,0 +1,714 @@
+﻿KITES VECTOR PIPELINE REGRESSION REPORT
+Generated: 2026-11-04 19:46:02
+Project: C:\Projects\Vector-Extension-Kites
+
+==============================================================================
+rv5-nh-nf - NH/NF (software NOPs)
+Program: examples\vector_hazard_test_nh_nf.s
+Functional result: PASS
+v1=True; v2=True; v3=True; v4=True
+Memory 0x100=True; Memory 0x200=True
+Cycles=60; Retired=56; CPI=1.07143; Stalls=0
+
+----- Full CLI output -----
+Kites CLI REPL. Type 'help' for commands, 'exit' to quit.
+kites-cli.exe : Setting line number to instruction type mapping for program
+At C:\Projects\Vector-Extension-Kites\run_kites_vector_regression.ps1:75 char:9
++         & $exe --vm $test.Vm --repl 2>&1 |
++         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Setting line nu...ing for program:String) [], RemoteExcepti 
+   on
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  4
+kites> kites> kites> kites> kites> kites> kites> General-purpose registers:
+  x0   = 0x0000000000000000
+  x1   = 0x0000000000000000
+  x2   = 0x0000000000000000
+  x3   = 0x0000000000000000
+  x4   = 0x0000000000000000
+  x5   = 0x0000000000000000
+  x6   = 0x0000000000000000
+  x7   = 0x0000000000000000
+  x8   = 0x0000000000000000
+  x9   = 0x0000000000000000
+  x10  = 0x0000000000000100
+  x11  = 0x000000000000002c
+  x12  = 0x0000000000000200
+  x13  = 0x0000000000000000
+  x14  = 0x0000000000000000
+  x15  = 0x0000000000000000
+  x16  = 0x0000000000000000
+  x17  = 0x0000000000000000
+  x18  = 0x0000000000000000
+  x19  = 0x0000000000000000
+  x20  = 0x0000000000000000
+  x21  = 0x0000000000000000
+  x22  = 0x0000000000000000
+  x23  = 0x0000000000000000
+  x24  = 0x0000000000000000
+  x25  = 0x0000000000000000
+  x26  = 0x0000000000000000
+  x27  = 0x0000000000000000
+  x28  = 0x0000000000000000
+  x29  = 0x0000000000000000
+  x30  = 0x0000000000000000
+  x31  = 0x0000000000000000
+Floating-point registers:
+  f0   = 0x0000000000000000
+  f1   = 0x0000000000000000
+  f2   = 0x0000000000000000
+  f3   = 0x0000000000000000
+  f4   = 0x0000000000000000
+  f5   = 0x0000000000000000
+  f6   = 0x0000000000000000
+  f7   = 0x0000000000000000
+  f8   = 0x0000000000000000
+  f9   = 0x0000000000000000
+  f10  = 0x0000000000000000
+  f11  = 0x0000000000000000
+  f12  = 0x0000000000000000
+  f13  = 0x0000000000000000
+  f14  = 0x0000000000000000
+  f15  = 0x0000000000000000
+  f16  = 0x0000000000000000
+  f17  = 0x0000000000000000
+  f18  = 0x0000000000000000
+  f19  = 0x0000000000000000
+  f20  = 0x0000000000000000
+  f21  = 0x0000000000000000
+  f22  = 0x0000000000000000
+  f23  = 0x0000000000000000
+  f24  = 0x0000000000000000
+  f25  = 0x0000000000000000
+  f26  = 0x0000000000000000
+  f27  = 0x0000000000000000
+  f28  = 0x0000000000000000
+  f29  = 0x0000000000000000
+  f30  = 0x0000000000000000
+  f31  = 0x0000000000000000
+Vector registers:
+  v0  = 0, 0, 0, 0
+  v1  = 11, 22, 33, 44
+  v2  = 10, 20, 30, 40
+  v3  = 21, 42, 63, 84
+  v4  = 10, 20, 30, 40
+  v5  = 0, 0, 0, 0
+  v6  = 0, 0, 0, 0
+  v7  = 0, 0, 0, 0
+  v8  = 0, 0, 0, 0
+  v9  = 0, 0, 0, 0
+  v10 = 0, 0, 0, 0
+  v11 = 0, 0, 0, 0
+  v12 = 0, 0, 0, 0
+  v13 = 0, 0, 0, 0
+  v14 = 0, 0, 0, 0
+  v15 = 0, 0, 0, 0
+  v16 = 0, 0, 0, 0
+  v17 = 0, 0, 0, 0
+  v18 = 0, 0, 0, 0
+  v19 = 0, 0, 0, 0
+  v20 = 0, 0, 0, 0
+  v21 = 0, 0, 0, 0
+  v22 = 0, 0, 0, 0
+  v23 = 0, 0, 0, 0
+  v24 = 0, 0, 0, 0
+  v25 = 0, 0, 0, 0
+  v26 = 0, 0, 0, 0
+  v27 = 0, 0, 0, 0
+  v28 = 0, 0, 0, 0
+  v29 = 0, 0, 0, 0
+  v30 = 0, 0, 0, 0
+  v31 = 0, 0, 0, 0
+Control and status registers:
+  fcsr    = 0x0000000000000000
+  frm     = 0x0000000000000000
+  fflags  = 0x0000000000000000
+kites> Memory Dump at Address: 0x100
+-----------------------------------------------------------------
+0x0000000000000100 | 0b 00 00 00 00 00 00 00 | 0x000000000000000b
+0x0000000000000108 | 16 00 00 00 00 00 00 00 | 0x0000000000000016
+0x0000000000000110 | 21 00 00 00 00 00 00 00 | 0x0000000000000021
+0x0000000000000118 | 2c 00 00 00 00 00 00 00 | 0x000000000000002c
+-----------------------------------------------------------------
+kites> Memory Dump at Address: 0x200
+-----------------------------------------------------------------
+0x0000000000000200 | 0a 00 00 00 00 00 00 00 | 0x000000000000000a
+0x0000000000000208 | 14 00 00 00 00 00 00 00 | 0x0000000000000014
+0x0000000000000210 | 1e 00 00 00 00 00 00 00 | 0x000000000000001e
+0x0000000000000218 | 28 00 00 00 00 00 00 00 | 0x0000000000000028
+-----------------------------------------------------------------
+kites> PC:                    0xf0
+Cycles:                60
+Instructions retired:  56
+CPI:                   1.07143
+IPC:                   0.933333
+Stall cycles:          0
+Branch mispredictions: 0
+kites> 
+
+
+==============================================================================
+rv5-nh-f - NH/F (forwarding + load-use NOP)
+Program: examples\vector_hazard_test_nh_f.s
+Functional result: PASS
+v1=True; v2=True; v3=True; v4=True
+Memory 0x100=True; Memory 0x200=True
+Cycles=19; Retired=15; CPI=1.26667; Stalls=0
+
+----- Full CLI output -----
+Kites CLI REPL. Type 'help' for commands, 'exit' to quit.
+kites-cli.exe : Setting line number to instruction type mapping for program
+At C:\Projects\Vector-Extension-Kites\run_kites_vector_regression.ps1:75 char:9
++         & $exe --vm $test.Vm --repl 2>&1 |
++         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Setting line nu...ing for program:String) [], RemoteExcepti 
+   on
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  9
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  9
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  9
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  9
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  9
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  9
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  9
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  9
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  9
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  9
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  9
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  9
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  9
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  9
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  9
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  9
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  9
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  9
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  9
+kites> kites> kites> kites> kites> kites> kites> General-purpose registers:
+  x0   = 0x0000000000000000
+  x1   = 0x0000000000000000
+  x2   = 0x0000000000000000
+  x3   = 0x0000000000000000
+  x4   = 0x0000000000000000
+  x5   = 0x0000000000000000
+  x6   = 0x0000000000000000
+  x7   = 0x0000000000000000
+  x8   = 0x0000000000000000
+  x9   = 0x0000000000000000
+  x10  = 0x0000000000000100
+  x11  = 0x000000000000002c
+  x12  = 0x0000000000000200
+  x13  = 0x0000000000000000
+  x14  = 0x0000000000000000
+  x15  = 0x0000000000000000
+  x16  = 0x0000000000000000
+  x17  = 0x0000000000000000
+  x18  = 0x0000000000000000
+  x19  = 0x0000000000000000
+  x20  = 0x0000000000000000
+  x21  = 0x0000000000000000
+  x22  = 0x0000000000000000
+  x23  = 0x0000000000000000
+  x24  = 0x0000000000000000
+  x25  = 0x0000000000000000
+  x26  = 0x0000000000000000
+  x27  = 0x0000000000000000
+  x28  = 0x0000000000000000
+  x29  = 0x0000000000000000
+  x30  = 0x0000000000000000
+  x31  = 0x0000000000000000
+Floating-point registers:
+  f0   = 0x0000000000000000
+  f1   = 0x0000000000000000
+  f2   = 0x0000000000000000
+  f3   = 0x0000000000000000
+  f4   = 0x0000000000000000
+  f5   = 0x0000000000000000
+  f6   = 0x0000000000000000
+  f7   = 0x0000000000000000
+  f8   = 0x0000000000000000
+  f9   = 0x0000000000000000
+  f10  = 0x0000000000000000
+  f11  = 0x0000000000000000
+  f12  = 0x0000000000000000
+  f13  = 0x0000000000000000
+  f14  = 0x0000000000000000
+  f15  = 0x0000000000000000
+  f16  = 0x0000000000000000
+  f17  = 0x0000000000000000
+  f18  = 0x0000000000000000
+  f19  = 0x0000000000000000
+  f20  = 0x0000000000000000
+  f21  = 0x0000000000000000
+  f22  = 0x0000000000000000
+  f23  = 0x0000000000000000
+  f24  = 0x0000000000000000
+  f25  = 0x0000000000000000
+  f26  = 0x0000000000000000
+  f27  = 0x0000000000000000
+  f28  = 0x0000000000000000
+  f29  = 0x0000000000000000
+  f30  = 0x0000000000000000
+  f31  = 0x0000000000000000
+Vector registers:
+  v0  = 0, 0, 0, 0
+  v1  = 11, 22, 33, 44
+  v2  = 10, 20, 30, 40
+  v3  = 21, 42, 63, 84
+  v4  = 10, 20, 30, 40
+  v5  = 0, 0, 0, 0
+  v6  = 0, 0, 0, 0
+  v7  = 0, 0, 0, 0
+  v8  = 0, 0, 0, 0
+  v9  = 0, 0, 0, 0
+  v10 = 0, 0, 0, 0
+  v11 = 0, 0, 0, 0
+  v12 = 0, 0, 0, 0
+  v13 = 0, 0, 0, 0
+  v14 = 0, 0, 0, 0
+  v15 = 0, 0, 0, 0
+  v16 = 0, 0, 0, 0
+  v17 = 0, 0, 0, 0
+  v18 = 0, 0, 0, 0
+  v19 = 0, 0, 0, 0
+  v20 = 0, 0, 0, 0
+  v21 = 0, 0, 0, 0
+  v22 = 0, 0, 0, 0
+  v23 = 0, 0, 0, 0
+  v24 = 0, 0, 0, 0
+  v25 = 0, 0, 0, 0
+  v26 = 0, 0, 0, 0
+  v27 = 0, 0, 0, 0
+  v28 = 0, 0, 0, 0
+  v29 = 0, 0, 0, 0
+  v30 = 0, 0, 0, 0
+  v31 = 0, 0, 0, 0
+Control and status registers:
+  fcsr    = 0x0000000000000000
+  frm     = 0x0000000000000000
+  fflags  = 0x0000000000000000
+kites> Memory Dump at Address: 0x100
+-----------------------------------------------------------------
+0x0000000000000100 | 0b 00 00 00 00 00 00 00 | 0x000000000000000b
+0x0000000000000108 | 16 00 00 00 00 00 00 00 | 0x0000000000000016
+0x0000000000000110 | 21 00 00 00 00 00 00 00 | 0x0000000000000021
+0x0000000000000118 | 2c 00 00 00 00 00 00 00 | 0x000000000000002c
+-----------------------------------------------------------------
+kites> Memory Dump at Address: 0x200
+-----------------------------------------------------------------
+0x0000000000000200 | 0a 00 00 00 00 00 00 00 | 0x000000000000000a
+0x0000000000000208 | 14 00 00 00 00 00 00 00 | 0x0000000000000014
+0x0000000000000210 | 1e 00 00 00 00 00 00 00 | 0x000000000000001e
+0x0000000000000218 | 28 00 00 00 00 00 00 00 | 0x0000000000000028
+-----------------------------------------------------------------
+kites> PC:                    0x4c
+Cycles:                19
+Instructions retired:  15
+CPI:                   1.26667
+IPC:                   0.789474
+Stall cycles:          0
+Branch mispredictions: 0
+kites> 
+
+
+==============================================================================
+rv5-h-nf - H/NF (hardware hazard detection)
+Program: examples\vector_hazard_test.s
+Functional result: PASS
+v1=True; v2=True; v3=True; v4=True
+Memory 0x100=True; Memory 0x200=True
+Cycles=32; Retired=14; CPI=2.28571; Stalls=14
+
+----- Full CLI output -----
+Kites CLI REPL. Type 'help' for commands, 'exit' to quit.
+kites-cli.exe : Setting line number to instruction type mapping for program
+At C:\Projects\Vector-Extension-Kites\run_kites_vector_regression.ps1:75 char:9
++         & $exe --vm $test.Vm --repl 2>&1 |
++         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Setting line nu...ing for program:String) [], RemoteExcepti 
+   on
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+kites> kites> kites> kites> kites> kites> kites> General-purpose registers:
+  x0   = 0x0000000000000000
+  x1   = 0x0000000000000000
+  x2   = 0x0000000000000000
+  x3   = 0x0000000000000000
+  x4   = 0x0000000000000000
+  x5   = 0x0000000000000000
+  x6   = 0x0000000000000000
+  x7   = 0x0000000000000000
+  x8   = 0x0000000000000000
+  x9   = 0x0000000000000000
+  x10  = 0x0000000000000100
+  x11  = 0x000000000000002c
+  x12  = 0x0000000000000200
+  x13  = 0x0000000000000000
+  x14  = 0x0000000000000000
+  x15  = 0x0000000000000000
+  x16  = 0x0000000000000000
+  x17  = 0x0000000000000000
+  x18  = 0x0000000000000000
+  x19  = 0x0000000000000000
+  x20  = 0x0000000000000000
+  x21  = 0x0000000000000000
+  x22  = 0x0000000000000000
+  x23  = 0x0000000000000000
+  x24  = 0x0000000000000000
+  x25  = 0x0000000000000000
+  x26  = 0x0000000000000000
+  x27  = 0x0000000000000000
+  x28  = 0x0000000000000000
+  x29  = 0x0000000000000000
+  x30  = 0x0000000000000000
+  x31  = 0x0000000000000000
+Floating-point registers:
+  f0   = 0x0000000000000000
+  f1   = 0x0000000000000000
+  f2   = 0x0000000000000000
+  f3   = 0x0000000000000000
+  f4   = 0x0000000000000000
+  f5   = 0x0000000000000000
+  f6   = 0x0000000000000000
+  f7   = 0x0000000000000000
+  f8   = 0x0000000000000000
+  f9   = 0x0000000000000000
+  f10  = 0x0000000000000000
+  f11  = 0x0000000000000000
+  f12  = 0x0000000000000000
+  f13  = 0x0000000000000000
+  f14  = 0x0000000000000000
+  f15  = 0x0000000000000000
+  f16  = 0x0000000000000000
+  f17  = 0x0000000000000000
+  f18  = 0x0000000000000000
+  f19  = 0x0000000000000000
+  f20  = 0x0000000000000000
+  f21  = 0x0000000000000000
+  f22  = 0x0000000000000000
+  f23  = 0x0000000000000000
+  f24  = 0x0000000000000000
+  f25  = 0x0000000000000000
+  f26  = 0x0000000000000000
+  f27  = 0x0000000000000000
+  f28  = 0x0000000000000000
+  f29  = 0x0000000000000000
+  f30  = 0x0000000000000000
+  f31  = 0x0000000000000000
+Vector registers:
+  v0  = 0, 0, 0, 0
+  v1  = 11, 22, 33, 44
+  v2  = 10, 20, 30, 40
+  v3  = 21, 42, 63, 84
+  v4  = 10, 20, 30, 40
+  v5  = 0, 0, 0, 0
+  v6  = 0, 0, 0, 0
+  v7  = 0, 0, 0, 0
+  v8  = 0, 0, 0, 0
+  v9  = 0, 0, 0, 0
+  v10 = 0, 0, 0, 0
+  v11 = 0, 0, 0, 0
+  v12 = 0, 0, 0, 0
+  v13 = 0, 0, 0, 0
+  v14 = 0, 0, 0, 0
+  v15 = 0, 0, 0, 0
+  v16 = 0, 0, 0, 0
+  v17 = 0, 0, 0, 0
+  v18 = 0, 0, 0, 0
+  v19 = 0, 0, 0, 0
+  v20 = 0, 0, 0, 0
+  v21 = 0, 0, 0, 0
+  v22 = 0, 0, 0, 0
+  v23 = 0, 0, 0, 0
+  v24 = 0, 0, 0, 0
+  v25 = 0, 0, 0, 0
+  v26 = 0, 0, 0, 0
+  v27 = 0, 0, 0, 0
+  v28 = 0, 0, 0, 0
+  v29 = 0, 0, 0, 0
+  v30 = 0, 0, 0, 0
+  v31 = 0, 0, 0, 0
+Control and status registers:
+  fcsr    = 0x0000000000000000
+  frm     = 0x0000000000000000
+  fflags  = 0x0000000000000000
+kites> Memory Dump at Address: 0x100
+-----------------------------------------------------------------
+0x0000000000000100 | 0b 00 00 00 00 00 00 00 | 0x000000000000000b
+0x0000000000000108 | 16 00 00 00 00 00 00 00 | 0x0000000000000016
+0x0000000000000110 | 21 00 00 00 00 00 00 00 | 0x0000000000000021
+0x0000000000000118 | 2c 00 00 00 00 00 00 00 | 0x000000000000002c
+-----------------------------------------------------------------
+kites> Memory Dump at Address: 0x200
+-----------------------------------------------------------------
+0x0000000000000200 | 0a 00 00 00 00 00 00 00 | 0x000000000000000a
+0x0000000000000208 | 14 00 00 00 00 00 00 00 | 0x0000000000000014
+0x0000000000000210 | 1e 00 00 00 00 00 00 00 | 0x000000000000001e
+0x0000000000000218 | 28 00 00 00 00 00 00 00 | 0x0000000000000028
+-----------------------------------------------------------------
+kites> PC:                    0x48
+Cycles:                32
+Instructions retired:  14
+CPI:                   2.28571
+IPC:                   0.4375
+Stall cycles:          14
+Branch mispredictions: 0
+kites> 
+
+
+==============================================================================
+rv5-h-f - H/F (hazard detection + forwarding)
+Program: examples\vector_hazard_test.s
+Functional result: PASS
+v1=True; v2=True; v3=True; v4=True
+Memory 0x100=True; Memory 0x200=True
+Cycles=19; Retired=14; CPI=1.35714; Stalls=1
+
+----- Full CLI output -----
+Kites CLI REPL. Type 'help' for commands, 'exit' to quit.
+kites-cli.exe : Setting line number to instruction type mapping for program
+At C:\Projects\Vector-Extension-Kites\run_kites_vector_regression.ps1:75 char:9
++         & $exe --vm $test.Vm --repl 2>&1 |
++         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Setting line nu...ing for program:String) [], RemoteExcepti 
+   on
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+Processor clocked. Last executed PC:  0 , Instruction number:  0 , Mapped line number:  8
+kites> kites> kites> kites> kites> kites> kites> General-purpose registers:
+  x0   = 0x0000000000000000
+  x1   = 0x0000000000000000
+  x2   = 0x0000000000000000
+  x3   = 0x0000000000000000
+  x4   = 0x0000000000000000
+  x5   = 0x0000000000000000
+  x6   = 0x0000000000000000
+  x7   = 0x0000000000000000
+  x8   = 0x0000000000000000
+  x9   = 0x0000000000000000
+  x10  = 0x0000000000000100
+  x11  = 0x000000000000002c
+  x12  = 0x0000000000000200
+  x13  = 0x0000000000000000
+  x14  = 0x0000000000000000
+  x15  = 0x0000000000000000
+  x16  = 0x0000000000000000
+  x17  = 0x0000000000000000
+  x18  = 0x0000000000000000
+  x19  = 0x0000000000000000
+  x20  = 0x0000000000000000
+  x21  = 0x0000000000000000
+  x22  = 0x0000000000000000
+  x23  = 0x0000000000000000
+  x24  = 0x0000000000000000
+  x25  = 0x0000000000000000
+  x26  = 0x0000000000000000
+  x27  = 0x0000000000000000
+  x28  = 0x0000000000000000
+  x29  = 0x0000000000000000
+  x30  = 0x0000000000000000
+  x31  = 0x0000000000000000
+Floating-point registers:
+  f0   = 0x0000000000000000
+  f1   = 0x0000000000000000
+  f2   = 0x0000000000000000
+  f3   = 0x0000000000000000
+  f4   = 0x0000000000000000
+  f5   = 0x0000000000000000
+  f6   = 0x0000000000000000
+  f7   = 0x0000000000000000
+  f8   = 0x0000000000000000
+  f9   = 0x0000000000000000
+  f10  = 0x0000000000000000
+  f11  = 0x0000000000000000
+  f12  = 0x0000000000000000
+  f13  = 0x0000000000000000
+  f14  = 0x0000000000000000
+  f15  = 0x0000000000000000
+  f16  = 0x0000000000000000
+  f17  = 0x0000000000000000
+  f18  = 0x0000000000000000
+  f19  = 0x0000000000000000
+  f20  = 0x0000000000000000
+  f21  = 0x0000000000000000
+  f22  = 0x0000000000000000
+  f23  = 0x0000000000000000
+  f24  = 0x0000000000000000
+  f25  = 0x0000000000000000
+  f26  = 0x0000000000000000
+  f27  = 0x0000000000000000
+  f28  = 0x0000000000000000
+  f29  = 0x0000000000000000
+  f30  = 0x0000000000000000
+  f31  = 0x0000000000000000
+Vector registers:
+  v0  = 0, 0, 0, 0
+  v1  = 11, 22, 33, 44
+  v2  = 10, 20, 30, 40
+  v3  = 21, 42, 63, 84
+  v4  = 10, 20, 30, 40
+  v5  = 0, 0, 0, 0
+  v6  = 0, 0, 0, 0
+  v7  = 0, 0, 0, 0
+  v8  = 0, 0, 0, 0
+  v9  = 0, 0, 0, 0
+  v10 = 0, 0, 0, 0
+  v11 = 0, 0, 0, 0
+  v12 = 0, 0, 0, 0
+  v13 = 0, 0, 0, 0
+  v14 = 0, 0, 0, 0
+  v15 = 0, 0, 0, 0
+  v16 = 0, 0, 0, 0
+  v17 = 0, 0, 0, 0
+  v18 = 0, 0, 0, 0
+  v19 = 0, 0, 0, 0
+  v20 = 0, 0, 0, 0
+  v21 = 0, 0, 0, 0
+  v22 = 0, 0, 0, 0
+  v23 = 0, 0, 0, 0
+  v24 = 0, 0, 0, 0
+  v25 = 0, 0, 0, 0
+  v26 = 0, 0, 0, 0
+  v27 = 0, 0, 0, 0
+  v28 = 0, 0, 0, 0
+  v29 = 0, 0, 0, 0
+  v30 = 0, 0, 0, 0
+  v31 = 0, 0, 0, 0
+Control and status registers:
+  fcsr    = 0x0000000000000000
+  frm     = 0x0000000000000000
+  fflags  = 0x0000000000000000
+kites> Memory Dump at Address: 0x100
+-----------------------------------------------------------------
+0x0000000000000100 | 0b 00 00 00 00 00 00 00 | 0x000000000000000b
+0x0000000000000108 | 16 00 00 00 00 00 00 00 | 0x0000000000000016
+0x0000000000000110 | 21 00 00 00 00 00 00 00 | 0x0000000000000021
+0x0000000000000118 | 2c 00 00 00 00 00 00 00 | 0x000000000000002c
+-----------------------------------------------------------------
+kites> Memory Dump at Address: 0x200
+-----------------------------------------------------------------
+0x0000000000000200 | 0a 00 00 00 00 00 00 00 | 0x000000000000000a
+0x0000000000000208 | 14 00 00 00 00 00 00 00 | 0x0000000000000014
+0x0000000000000210 | 1e 00 00 00 00 00 00 00 | 0x000000000000001e
+0x0000000000000218 | 28 00 00 00 00 00 00 00 | 0x0000000000000028
+-----------------------------------------------------------------
+kites> PC:                    0x48
+Cycles:                19
+Instructions retired:  14
+CPI:                   1.35714
+IPC:                   0.736842
+Stall cycles:          1
+Branch mispredictions: 0
+kites> 
+
+
