@@ -51,3 +51,15 @@ Run the workload checks with the normal test preset:
 cmake --build --preset test-only
 ctest --preset test-only -R MatrixKernelsTest
 ```
+
+The scaling benchmark generates 100 deterministic input matrices for each of
+the dimensions 2, 3, 4, 5, 6, 8, 10, 12, and 16, and runs scalar and vector
+versions of all three methods. It verifies results for every case and writes
+the per-dimension averages and per-input CSV data to the repository-root
+`report.txt`. The full benchmark takes several minutes; set
+`KITES_MATRIX_BENCHMARK_SAMPLES` to a positive integer to use a smaller
+reproducible sample count.
+
+```sh
+ctest --preset test-only -R MatrixScalingBenchmark --output-on-failure
+```
