@@ -300,7 +300,8 @@ void RV5StageProcessorHF::pipeline_execute()
     // then bypass the value currently in MEM/WB (the instruction that just
     // completed MEM). This covers both vector arithmetic and vector loads.
     const uint32_t vector_instruction = id_ex_reg_.instruction;
-    if (vector_isa::isVectorArithmetic(vector_instruction))
+    if (vector_isa::isVectorArithmetic(vector_instruction) ||
+        vector_isa::isVectorDot(vector_instruction))
     {
         id_ex_reg_.vreg1_data =
             registers_.ReadVectorRegister(id_ex_reg_.vrs1);

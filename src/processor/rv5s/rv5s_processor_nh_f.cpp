@@ -220,7 +220,8 @@ void RV5StageProcessorNHF::pipeline_execute()
     // observes values committed by this cycle's WB, while MEM/WB contains the
     // result produced by the instruction that completed MEM this cycle.
     const uint32_t vector_instruction = id_ex_reg_.instruction;
-    if (vector_isa::isVectorArithmetic(vector_instruction))
+    if (vector_isa::isVectorArithmetic(vector_instruction) ||
+        vector_isa::isVectorDot(vector_instruction))
     {
         id_ex_reg_.vreg1_data =
             registers_.ReadVectorRegister(id_ex_reg_.vrs1);

@@ -447,6 +447,7 @@ enum class SyntaxType
     O_FPR_C_I_LP_GPR_RP, ///< Opcode floating-point-register , immediate , lparen ( general-register
                          ///< ) rparen
     O_VREG_C_VREG_C_VREG, ///< Opcode vector-register, vector-register, vector-register
+    O_GPR_C_VREG_C_VREG, ///< Opcode GPR destination, vector-register, vector-register
     O_VREG_C_LP_GPR_RP ///< Opcode vector-register, (general-register)
 };
 

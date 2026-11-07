@@ -170,7 +170,8 @@ void RV5StageProcessorHNF::Step()
         // across every vector path in this pipeline).
         const uint32_t consumer = if_id_reg_.instruction;
         const bool consumer_is_vector_arithmetic =
-            vector_isa::isVectorArithmetic(consumer);
+            vector_isa::isVectorArithmetic(consumer) ||
+            vector_isa::isVectorDot(consumer);
         const bool consumer_is_vector_store =
             vector_isa::isVectorStore(consumer);
 

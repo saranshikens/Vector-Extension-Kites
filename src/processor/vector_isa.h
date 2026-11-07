@@ -85,6 +85,10 @@ inline bool isVectorStore(uint32_t instruction)
 constexpr uint8_t FUNCT6_VADD = 0b000000;
 constexpr uint8_t FUNCT6_VSUB = 0b000010;
 constexpr uint8_t FUNCT6_VMUL = 0b100101;
+// Custom scalar-result reduction encoding: opcode=0x57, funct3=010,
+// funct6=010101. Audited against the vector instructions currently implemented.
+constexpr uint8_t FUNCT6_VDOT = 0b010101;
+constexpr uint8_t FUNCT3_VDOT = 0b010;
 
 enum class VectorOperation
 {
@@ -93,6 +97,23 @@ enum class VectorOperation
     SUB,
     MUL
 };
+
+inline bool isVectorDot(uint32_t instruction)
+{
+    return opcode(instruction) == OPCODE_VECTOR &&
+           funct3(instruction) == FUNCT3_VDOT &&
+           funct6(instruction) == FUNCT6_VDOT;
+}
+
+// Unsigned 64-bit reduction. Native uint64_t multiplication/addition gives the
+// required modulo-2^64 wraparound semantics. The caller supplies at least VL lanes.
+inline uint64_t dotProduct(const uint64_t *source1, const uint64_t *source2, size_t vl)
+{
+    uint64_t accumulator = 0;
+    for (size_t lane = 0; lane < vl; ++lane)
+        accumulator += source1[lane] * source2[lane];
+    return accumulator;
+}
 
 inline VectorOperation decodeArithmetic(uint32_t instruction)
 {

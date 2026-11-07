@@ -296,8 +296,9 @@ void RV5StageVM_Base::pipeline_decode()
     id_ex_reg_.vrs2 = vector_isa::vs2(instruction);
     id_ex_reg_.vrd  = vector_isa::vd(instruction);
 
-    // Vector arithmetic: vadd, vsub, vmul.
-    if (vector_isa::isVectorArithmetic(instruction))
+    // Vector arithmetic and custom scalar-result dot reduction.
+    if (vector_isa::isVectorArithmetic(instruction) ||
+        vector_isa::isVectorDot(instruction))
     {
         id_ex_reg_.vreg1_data =
             registers_.ReadVectorRegister(id_ex_reg_.vrs1);
@@ -305,7 +306,9 @@ void RV5StageVM_Base::pipeline_decode()
         id_ex_reg_.vreg2_data =
             registers_.ReadVectorRegister(id_ex_reg_.vrs2);
 
-        id_ex_reg_.vreg_write = true;
+        id_ex_reg_.vreg_write = vector_isa::isVectorArithmetic(instruction);
+        if (vector_isa::isVectorDot(instruction))
+            id_ex_reg_.reg_write = (id_ex_reg_.rd != 0);
     }
 
     // Vector configuration instruction.
@@ -345,6 +348,7 @@ bool RV5StageVM_Base::pipeline_execute_vector()
 
     const bool is_vector_arithmetic =
         vector_isa::isVectorArithmetic(instruction);
+    const bool is_vector_dot = vector_isa::isVectorDot(instruction);
 
     const bool is_vector_load =
         vector_isa::isVectorLoad(instruction);
@@ -355,6 +359,7 @@ bool RV5StageVM_Base::pipeline_execute_vector()
     // Handle vector configuration, arithmetic, loads, and stores.
     if (!is_vector_config &&
         !is_vector_arithmetic &&
+        !is_vector_dot &&
         !is_vector_load &&
         !is_vector_store)
     {
@@ -396,6 +401,26 @@ bool RV5StageVM_Base::pipeline_execute_vector()
     ex_mem_reg_.vreg_write = false;
     ex_mem_reg_.vector_load = false;
     ex_mem_reg_.vector_store = false;
+
+    // Custom vdot.vv: reduction of active lanes to a scalar GPR result.
+    if (is_vector_dot)
+    {
+        const size_t vl = registers_.GetVectorLength();
+        const auto &source1 = id_ex_reg_.vreg1_data;
+        const auto &source2 = id_ex_reg_.vreg2_data;
+        const uint64_t result =
+            vector_isa::dotProduct(source1.data(), source2.data(), vl);
+
+        ex_mem_reg_.rd = id_ex_reg_.rd;
+        ex_mem_reg_.alu_result = result;
+        ex_mem_reg_.reg_write = (id_ex_reg_.rd != 0);
+        ex_mem_reg_.freg_write = false;
+        ex_mem_reg_.mem_to_reg = false;
+        ex_mem_reg_.mem_read = false;
+        ex_mem_reg_.mem_write = false;
+        ex_mem_reg_.vreg_write = false;
+        return true;
+    }
 
     // Vector load: calculate the scalar base address in EX and carry
     // the destination vector register into the MEM/WB path.
@@ -683,6 +708,13 @@ void RV5StageVM_Base::register_write_back(const uint64_t &write_data)
     case 0b0110111:
     { // LUI
         registers_.WriteGpr(mem_wb_reg_.rd, write_data << 12);
+        break;
+    }
+    case 0b1010111: // vsetvli and custom vdot.vv scalar writeback
+    {
+        if (vector_isa::isVectorConfiguration(mem_wb_reg_.instruction) ||
+            vector_isa::isVectorDot(mem_wb_reg_.instruction))
+            registers_.WriteGpr(mem_wb_reg_.rd, write_data);
         break;
     }
     default:
@@ -1009,8 +1041,10 @@ void RV5StageVM_Base::pipeline_writeback()
             break;
         }
         case 0b1010111:
-        { // Vector configuration (vsetvli) writes selected VL to rd.
-            registers_.WriteGpr(mem_wb_reg_.rd, write_data);
+        { // Vector configuration or custom vdot.vv scalar result.
+            if (vector_isa::isVectorConfiguration(mem_wb_reg_.instruction) ||
+                vector_isa::isVectorDot(mem_wb_reg_.instruction))
+                registers_.WriteGpr(mem_wb_reg_.rd, write_data);
             break;
         }
         default:

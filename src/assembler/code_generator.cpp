@@ -15,6 +15,26 @@
 namespace Kites
 {
 static bool isVectorArithmeticMnemonic(const std::string &opcode);
+static bool isVectorDotMnemonic(const std::string &opcode);
+static uint32_t extractRegisterIndex(const std::string &reg);
+uint32_t generateVectorDotMachineCode(const ICUnit &block);
+static bool isVectorDotMnemonic(const std::string &opcode)
+{
+    return opcode == "vdot.vv";
+}
+
+uint32_t generateVectorDotMachineCode(const ICUnit &block)
+{
+    const uint32_t rd = extractRegisterIndex(block.getRd());
+    const uint32_t vs1 = extractRegisterIndex(block.getRs1());
+    const uint32_t vs2 = extractRegisterIndex(block.getRs2());
+    constexpr uint32_t opcode = 0x57;
+    constexpr uint32_t funct3 = 0b010;
+    constexpr uint32_t funct6 = 0b010101;
+    return (funct6 << 26) | (vs2 << 20) | (vs1 << 15) |
+           (funct3 << 12) | (rd << 7) | opcode;
+}
+
 static bool isVectorMemoryMnemonic(const std::string &opcode);
 static bool isVectorConfigurationMnemonic(const std::string &opcode);
 uint32_t generateVectorConfigurationMachineCode(const ICUnit &block);
@@ -33,6 +53,11 @@ printIntermediateCode(const std::vector<std::pair<ICUnit, bool>> &IntermediateCo
         {
             code = block.getOpcode() + " " + block.getRd() + " " +
                 block.getRs1() + " " + block.getImm();
+        }
+        else if (isVectorDotMnemonic(block.getOpcode()))
+        {
+            code = block.getOpcode() + " " + block.getRd() + ", " +
+                block.getRs1() + ", " + block.getRs2();
         }
         else if (isVectorArithmeticMnemonic(block.getOpcode()))
         {
@@ -83,7 +108,7 @@ printIntermediateCode(const std::vector<std::pair<ICUnit, bool>> &IntermediateCo
     return ICList;
 }
 
-static inline uint32_t extractRegisterIndex(const std::string &reg)
+static uint32_t extractRegisterIndex(const std::string &reg)
 {
     return static_cast<uint32_t>(std::stoi(reg.substr(1)));
 }
@@ -505,6 +530,10 @@ generateMachineCode(const std::vector<std::pair<ICUnit, bool>> &IntermediateCode
         if (isVectorConfigurationMnemonic(block.getOpcode()))
         {
             code = generateVectorConfigurationMachineCode(block);
+        }
+        else if (isVectorDotMnemonic(block.getOpcode()))
+        {
+            code = generateVectorDotMachineCode(block);
         }
         else if (isVectorArithmeticMnemonic(block.getOpcode()))
         {
