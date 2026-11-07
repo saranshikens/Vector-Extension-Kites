@@ -47,24 +47,42 @@ A-row load across four outputs, and moves four operands per vector load. Address
 calculation, loop control, vector loads, result stores, and explicit NOPs still
 cost instructions and cycles; the reduction is not the entire program.
 
-Factorization workloads
------------------------
-The factorization examples currently use scalar integer instructions; they do
-not yet use vector instructions. Their measured counts are included as
-workload baselines, not as evidence of vector speedup:
+Cholesky results
+----------------
+Both implementations produce the expected lower factor for the same SPD
+integer input.
 
-Kernel                         Instructions retired   Simulated cycles
------------------------------  ---------------------  ----------------
-Cholesky 4x4                            422                   577
-LU 4x4                                  542                   707
+Metric                         Scalar       Vector       Change
+-----------------------------  -----------  -----------  --------------------
+Instructions retired             422          362         60 fewer (14.22%)
+Simulated cycles                  577          461        116 fewer (20.10%)
+Cycle speedup                     --           --          1.25x
 
-Cholesky computes A = L * transpose(L) for a symmetric positive definite
-matrix whose Cholesky factors and diagonal square roots are integral. Its
-diagonal square-root search is exact only for this input domain.
+For each factor L[i][j], the vector kernel sets VL to j, loads the already
+computed prefixes of rows i and j, and uses vdot.vv for their product sum.
+Diagonal square roots remain scalar and are exact for the supported input
+domain.
 
-LU uses Doolittle factorization with a unit diagonal in L and no pivoting.
-Inputs must have nonzero U pivots, and divisions must be exact for exact
-integer results.
+LU results
+----------
+Both implementations produce the expected unit-lower L and row-major U
+factors for the same no-pivot input.
+
+Metric                         Scalar       Vector       Change
+-----------------------------  -----------  -----------  --------------------
+Instructions retired             542          492         50 fewer (9.23%)
+Simulated cycles                  707          607        100 fewer (14.14%)
+Cycle speedup                     --           --          1.16x
+
+The vector kernel sets VL to the current factorization row and uses vdot.vv
+for the Doolittle product sums. A transposed copy of U is maintained as
+scratch storage at 0x2500, making each U column contiguous for vector loads;
+the externally visible U remains row-major. The kernel does not pivot, so
+pivots must be nonzero and integer divisions exact.
+
+The scalar baselines are preserved as examples/cholesky_scalar_4x4.s and
+examples/lu_scalar_4x4.s. All percentages and speedups above are based on
+simulator counters for these 4x4 test inputs, not wall-clock timings.
 
 How to reproduce
 ----------------
@@ -73,17 +91,18 @@ From the repository root, build and run the focused regression tests:
     cmake --build --preset test-only
     ctest --preset test-only -R MatrixKernelsTest --output-on-failure
 
-The tests compare both multiplication outputs with the expected matrix, assert
-that vector multiplication retires fewer instructions and cycles, and verify
-the expected Cholesky and LU factors. The exact counts above were collected
-from the RV5 simulator's instructions_retired_ and cycle_s_ counters during
-these tests.
+The tests compare outputs from scalar and vector kernels with expected results,
+then assert that the vector versions retire fewer instructions and cycles. The
+counts above were collected from the RV5 simulator's instructions_retired_ and
+cycle_s_ counters during these tests.
 
 Relevant files
 --------------
 examples/matrix_multiply_scalar_4x4.s
 examples/matrix_multiply_vector_4x4.s
+examples/cholesky_scalar_4x4.s
 examples/cholesky_4x4.s
+examples/lu_scalar_4x4.s
 examples/lu_4x4.s
 test/matrix_kernels_test.cpp
 docs/MATRIX_KERNELS.md

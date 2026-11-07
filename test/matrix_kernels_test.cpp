@@ -129,32 +129,45 @@ TEST(MatrixKernelsTest, VectorMultiplyMatchesScalarAndUsesFewerInstructions)
 
 TEST(MatrixKernelsTest, CholeskyFactorsExactIntegerSpdMatrix)
 {
-    auto vm = runKernel("../examples/cholesky_4x4.s",
-                        [](Kites::MemoryController &memory)
-                        {
-                            writeMatrix(memory, kMatrixA, kCholeskyInput);
-                            writeMatrix(memory, kMatrixL, {});
-                        });
+    const auto setup = [](Kites::MemoryController &memory)
+    {
+        writeMatrix(memory, kMatrixA, kCholeskyInput);
+        writeMatrix(memory, kMatrixL, {});
+    };
+    auto scalar = runKernel("../examples/cholesky_scalar_4x4.s", setup);
+    auto vector = runKernel("../examples/cholesky_4x4.s", setup);
 
-    EXPECT_EQ(readMatrix(vm->memory_controller_, kMatrixL), kCholeskyExpected);
-    RecordProperty("cholesky_instructions_retired", vm->instructions_retired_);
-    RecordProperty("cholesky_cycles", vm->cycle_s_);
+    EXPECT_EQ(readMatrix(scalar->memory_controller_, kMatrixL), kCholeskyExpected);
+    EXPECT_EQ(readMatrix(vector->memory_controller_, kMatrixL), kCholeskyExpected);
+    EXPECT_LT(vector->instructions_retired_, scalar->instructions_retired_);
+    EXPECT_LT(vector->cycle_s_, scalar->cycle_s_);
+    RecordProperty("cholesky_scalar_instructions_retired", scalar->instructions_retired_);
+    RecordProperty("cholesky_scalar_cycles", scalar->cycle_s_);
+    RecordProperty("cholesky_vector_instructions_retired", vector->instructions_retired_);
+    RecordProperty("cholesky_vector_cycles", vector->cycle_s_);
 }
 
 TEST(MatrixKernelsTest, LuFactorsMatrixWithoutPivoting)
 {
-    auto vm = runKernel("../examples/lu_4x4.s",
-                        [](Kites::MemoryController &memory)
-                        {
-                            writeMatrix(memory, kMatrixA, kLuInput);
-                            writeMatrix(memory, kMatrixL, {});
-                            writeMatrix(memory, kMatrixU, {});
-                        });
+    const auto setup = [](Kites::MemoryController &memory)
+    {
+        writeMatrix(memory, kMatrixA, kLuInput);
+        writeMatrix(memory, kMatrixL, {});
+        writeMatrix(memory, kMatrixU, {});
+    };
+    auto scalar = runKernel("../examples/lu_scalar_4x4.s", setup);
+    auto vector = runKernel("../examples/lu_4x4.s", setup);
 
-    EXPECT_EQ(readMatrix(vm->memory_controller_, kMatrixL), kLuExpectedL);
-    EXPECT_EQ(readMatrix(vm->memory_controller_, kMatrixU), kLuExpectedU);
-    RecordProperty("lu_instructions_retired", vm->instructions_retired_);
-    RecordProperty("lu_cycles", vm->cycle_s_);
+    EXPECT_EQ(readMatrix(scalar->memory_controller_, kMatrixL), kLuExpectedL);
+    EXPECT_EQ(readMatrix(scalar->memory_controller_, kMatrixU), kLuExpectedU);
+    EXPECT_EQ(readMatrix(vector->memory_controller_, kMatrixL), kLuExpectedL);
+    EXPECT_EQ(readMatrix(vector->memory_controller_, kMatrixU), kLuExpectedU);
+    EXPECT_LT(vector->instructions_retired_, scalar->instructions_retired_);
+    EXPECT_LT(vector->cycle_s_, scalar->cycle_s_);
+    RecordProperty("lu_scalar_instructions_retired", scalar->instructions_retired_);
+    RecordProperty("lu_scalar_cycles", scalar->cycle_s_);
+    RecordProperty("lu_vector_instructions_retired", vector->instructions_retired_);
+    RecordProperty("lu_vector_cycles", vector->cycle_s_);
 }
 
 } // namespace

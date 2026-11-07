@@ -1,7 +1,6 @@
-# Integer Cholesky factorization, A = L * transpose(L).
+# Vector-reduced integer Cholesky factorization, A = L * transpose(L).
 # A is row-major at 0x2000 and L is written row-major at 0x2200.
-# This exact-integer version requires an SPD matrix whose Cholesky entries
-# and diagonal square roots are integers (the test workload meets this rule).
+# Requires an SPD input with integral Cholesky entries and exact diagonal roots.
 main:
     li t0, 0x2000
     li t1, 0x2200
@@ -18,26 +17,25 @@ column_loop:
     add s5, t0, s4
     ld s3, 0(s5)
 
-    li s2, 0
-product_loop:
-    bge s2, s1, product_done
     mul s4, s0, t2
-    add s4, s4, s2
+    add s4, s4, s1
     slli s4, s4, 3
+    add s10, t1, s4
+    vsetvli x0, s1, 24
+    slli s4, s0, 5
     add s5, t1, s4
-    ld s6, 0(s5)
-
+    slli s4, s1, 5
+    add s6, t1, s4
     mul s4, s1, t2
-    add s4, s4, s2
+    add s4, s4, s1
     slli s4, s4, 3
-    add s5, t1, s4
-    ld s7, 0(s5)
-    mul s6, s6, s7
+    add s7, t1, s4
+    ld s9, 0(s7)
+    vle64.v v1, (s5)
+    vle64.v v2, (s6)
+    vdot.vv s6, v1, v2
     sub s3, s3, s6
-    addi s2, s2, 1
-    j product_loop
 
-product_done:
     bne s0, s1, off_diagonal
     li s8, 0
 
@@ -48,19 +46,10 @@ sqrt_loop:
     j sqrt_loop
 
 off_diagonal:
-    mul s4, s1, t2
-    add s4, s4, s1
-    slli s4, s4, 3
-    add s5, t1, s4
-    ld s9, 0(s5)
     div s8, s3, s9
 
 store_factor:
-    mul s4, s0, t2
-    add s4, s4, s1
-    slli s4, s4, 3
-    add s5, t1, s4
-    sd s8, 0(s5)
+    sd s8, 0(s10)
 
     addi s1, s1, 1
     bge s0, s1, column_loop
