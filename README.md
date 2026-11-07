@@ -38,6 +38,11 @@ cmake -DCMAKE_PREFIX_PATH="path/to/Qt/6.x.x/<compiler>" ..
 
 See [docs/TESTING.md](TESTING) for how to build and run tests, including coverage reports.
 
+## Matrix kernels
+
+See [docs/MATRIX_KERNELS.md](docs/MATRIX_KERNELS.md) for the scalar/vector
+matrix multiplication and integer Cholesky/LU assembly workloads.
+
 ## CLI
 
 See [docs/CLI.md](docs/CLI.md) for how to build and use the headless command-line executable.

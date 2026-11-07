@@ -10,8 +10,16 @@ add_executable(kites_test
     ${TEST_FILES}
 )
 
+target_include_directories(kites_test PRIVATE
+    "${CMAKE_SOURCE_DIR}/src"
+)
+
 target_link_libraries(kites_test PRIVATE
-    kites_core
+    kites_core_cli
+    Qt::Core
+    Qt::Widgets
+    Qt::Network
+    Qt::Concurrent
     GTest::gtest
     GTest::gmock_main
     Threads::Threads
@@ -46,8 +54,16 @@ if(ENABLE_COVERAGE)
     ${TEST_FILES}
     )
 
+    target_include_directories(kites_test_cov PRIVATE
+    "${CMAKE_SOURCE_DIR}/src"
+    )
+
     target_link_libraries(kites_test_cov PRIVATE
-    kites_core
+    kites_core_cli
+    Qt::Core
+    Qt::Widgets
+    Qt::Network
+    Qt::Concurrent
     GTest::gtest
     GTest::gmock_main
     Threads::Threads
@@ -70,11 +86,11 @@ if(ENABLE_COVERAGE)
     )
 
     target_compile_options(kites_test_cov PRIVATE -O0 --coverage)
-    target_compile_options(kites_core PRIVATE -O0 --coverage)
+    target_compile_options(kites_core_cli PRIVATE -O0 --coverage)
 
-    # kites_core is instrumented above, so every target that links it needs gcov,
+    # kites_core_cli is instrumented above, so every target that links it needs gcov,
     # not just the coverage test binary.
-    target_link_libraries(kites_core gcov)
+    target_link_libraries(kites_core_cli gcov)
 
     target_link_libraries(kites_test_cov PRIVATE gcov)
 

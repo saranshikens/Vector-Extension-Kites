@@ -1,0 +1,89 @@
+KITES MATRIX KERNEL OPTIMIZATION REPORT
+======================================
+
+Measurement setup
+-----------------
+Simulator: five-stage RV5 pipeline with hazard detection and forwarding
+Workload: 4x4 matrices of 64-bit integer elements
+Counters: simulator instructions retired and simulated cycles
+Correctness: all three matrix-kernel regression tests passed
+
+Matrix multiplication results
+-----------------------------
+Both implementations multiply the same A and B matrices and produce the same
+16-element output matrix.
+
+Metric                         Scalar       Vector       Change
+-----------------------------  -----------  -----------  --------------------
+Instructions retired           1,060          269        791 fewer (74.62%)
+Simulated cycles                1,317          334        983 fewer (74.64%)
+Instructions/cycle               0.805         0.805      approximately equal
+Cycle speedup                    --            --         3.94x
+
+The speedup is simulated-cycle speedup for this 4x4 workload, not wall-clock
+speedup. The cycle count includes the explicit NOP instructions in the vector
+example that allow its scalar address dependencies to clear before vector
+loads on the selected pipeline configuration.
+
+How the vector instructions are used
+------------------------------------
+The vector implementation uses the existing KITES vector instruction subset:
+
+1. vsetvli x0, t3, 24 configures a vector length of four lanes. Here t3 is 4,
+   and vtype immediate 24 selects the implemented e64,m1 element format.
+2. vle64.v loads four 64-bit matrix elements into a vector register. A row of A
+   is loaded once and reused for all four output columns in that row. B is
+   supplied in transposed row-major form so each column needed for a dot
+   product is also available as one contiguous four-element vector load.
+3. vdot.vv s3, v1, v2 is the custom KITES scalar-result dot-product instruction.
+   It computes sum(v1[lane] * v2[lane]) for the active lanes and writes the
+   reduction to scalar register s3. One such instruction replaces the scalar
+   loop's four multiply-and-accumulate pairs for each output element.
+4. sd stores the scalar dot-product result into the output matrix.
+
+This workload produces 16 output elements. The vector version replaces the
+per-element scalar reduction loop with one vdot.vv per output, amortizes each
+A-row load across four outputs, and moves four operands per vector load. Address
+calculation, loop control, vector loads, result stores, and explicit NOPs still
+cost instructions and cycles; the reduction is not the entire program.
+
+Factorization workloads
+-----------------------
+The factorization examples currently use scalar integer instructions; they do
+not yet use vector instructions. Their measured counts are included as
+workload baselines, not as evidence of vector speedup:
+
+Kernel                         Instructions retired   Simulated cycles
+-----------------------------  ---------------------  ----------------
+Cholesky 4x4                            422                   577
+LU 4x4                                  542                   707
+
+Cholesky computes A = L * transpose(L) for a symmetric positive definite
+matrix whose Cholesky factors and diagonal square roots are integral. Its
+diagonal square-root search is exact only for this input domain.
+
+LU uses Doolittle factorization with a unit diagonal in L and no pivoting.
+Inputs must have nonzero U pivots, and divisions must be exact for exact
+integer results.
+
+How to reproduce
+----------------
+From the repository root, build and run the focused regression tests:
+
+    cmake --build --preset test-only
+    ctest --preset test-only -R MatrixKernelsTest --output-on-failure
+
+The tests compare both multiplication outputs with the expected matrix, assert
+that vector multiplication retires fewer instructions and cycles, and verify
+the expected Cholesky and LU factors. The exact counts above were collected
+from the RV5 simulator's instructions_retired_ and cycle_s_ counters during
+these tests.
+
+Relevant files
+--------------
+examples/matrix_multiply_scalar_4x4.s
+examples/matrix_multiply_vector_4x4.s
+examples/cholesky_4x4.s
+examples/lu_4x4.s
+test/matrix_kernels_test.cpp
+docs/MATRIX_KERNELS.md
