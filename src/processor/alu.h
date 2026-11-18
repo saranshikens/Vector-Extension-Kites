@@ -381,6 +381,15 @@ class Alu
         const std::vector<uint64_t> &a,
         const std::vector<uint64_t> &b);
 
+    
+    // Vector-scalar double-precision floating-point operations.
+    [[nodiscard]] static std::vector<uint64_t> executeVectorFloatScalar(
+        AluOp op,
+        const std::vector<uint64_t>& vector_operand,
+        uint64_t scalar_operand,
+        const std::vector<uint64_t>& accumulator);
+
+
     // TODO: check all the floating point operations
 
     [[nodiscard]] static std::pair<uint64_t, uint8_t>

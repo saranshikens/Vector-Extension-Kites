@@ -88,6 +88,11 @@ constexpr uint8_t FUNCT6_VMUL = 0b100101;
 constexpr uint8_t FUNCT6_VDOT = 0b010101;
 constexpr uint8_t FUNCT3_VDOT = 0b010;
 
+// RVV floating-point operations with a scalar FPR operand (OPFVF).
+constexpr uint8_t FUNCT3_VF = 0b101;
+constexpr uint8_t FUNCT6_VFDIV = 0b100000;
+constexpr uint8_t FUNCT6_VFNMSAC = 0b101111;
+
 
 // Unsigned 64-bit vector dot product.
 // Preserves modulo-2^64 arithmetic semantics.
@@ -114,6 +119,37 @@ enum class VectorOperation
     SUB,
     MUL
 };
+
+enum class VectorFloatOperation
+{
+    INVALID,
+    DIV,
+    FNMSAC
+};
+
+inline bool isVectorFloatArithmetic(uint32_t instruction)
+{
+    return opcode(instruction) == OPCODE_VECTOR &&
+           funct3(instruction) == FUNCT3_VF &&
+           (funct6(instruction) == FUNCT6_VFDIV ||
+            funct6(instruction) == FUNCT6_VFNMSAC);
+}
+
+inline VectorFloatOperation decodeVectorFloat(uint32_t instruction)
+{
+    if (!isVectorFloatArithmetic(instruction))
+        return VectorFloatOperation::INVALID;
+
+    switch (funct6(instruction))
+    {
+    case FUNCT6_VFDIV:
+        return VectorFloatOperation::DIV;
+    case FUNCT6_VFNMSAC:
+        return VectorFloatOperation::FNMSAC;
+    default:
+        return VectorFloatOperation::INVALID;
+    }
+}
 
 inline bool isVectorDot(uint32_t instruction)
 {

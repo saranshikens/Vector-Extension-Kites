@@ -449,7 +449,9 @@ enum class SyntaxType
     O_VREG_C_VREG_C_VREG,
     O_GPR_C_VREG_C_VREG,
     O_VREG_C_LP_GPR_RP,
-    O_GPR_C_GPR_C_VTYPE
+    O_GPR_C_GPR_C_VTYPE,
+    O_VREG_C_VREG_C_FPR,  ///< Opcode vd, vs2, fs1 (vector divided by scalar)
+    O_VREG_C_FPR_C_VREG   ///< Opcode vd, fs1, vs2 (vector negative multiply-subtract accumulate)
 };
 
 extern std::unordered_map<std::string, RTypeInstructionEncoding> R_type_instruction_encoding_map;

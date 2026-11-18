@@ -19,6 +19,8 @@
 #include <cctype>
 #include <condition_variable>
 #include <cstdint>
+#include <cmath>
+#include <cstring>
 #include <iostream>
 #include <mutex>
 #include <queue>
@@ -235,6 +237,57 @@ void RVSSProcessor::Execute()
             execution_result_ = alu::Alu::executeVectorDot(
                 registers_.ReadVectorRegister(vs1),
                 registers_.ReadVectorRegister(vs2));
+
+            return;
+        }
+
+        // Vector floating-point operations with a scalar FPR operand.
+        if (vector_isa::isVectorFloatArithmetic(current_instruction_))
+        {
+            const auto operation =
+                vector_isa::decodeVectorFloat(current_instruction_);
+
+            const uint64_t scalar_bits = registers_.ReadFpr(vs1);
+
+            const auto source = registers_.ReadVectorRegister(vs2);
+            const auto old_values = registers_.ReadVectorRegister(vd);
+
+            std::vector<uint64_t> result;
+
+            if (operation == vector_isa::VectorFloatOperation::DIV)
+            {
+                // vfdiv.vf vd, vs2, fs1
+                // vd[i] = vs2[i] / fs1
+
+                result = alu::Alu::executeVectorFloatScalar(
+                    alu::AluOp::FDIV_D,
+                    source,
+                    scalar_bits,
+                    {}
+                );
+            }
+            else if (operation == vector_isa::VectorFloatOperation::FNMSAC)
+            {
+                // vfnmsac.vf vd, fs1, vs2
+                // vd[i] = -(fs1 * vs2[i]) + old_vd[i]
+
+                result = alu::Alu::executeVectorFloatScalar(
+                    alu::AluOp::FNMSUB_D,
+                    source,
+                    scalar_bits,
+                    old_values
+                );
+            }
+            else
+            {
+                throw std::runtime_error(
+                    "Unsupported vector floating-point operation");
+            }
+
+            registers_.WriteVectorRegister(vd, result);
+
+            current_delta_.vector_register_changes.push_back(
+                {vd, old_values, result});
 
             return;
         }
@@ -1046,6 +1099,7 @@ void RVSSProcessor::WriteBack()
     }
 
     if (vector_isa::isVectorArithmetic(current_instruction_) ||
+        vector_isa::isVectorFloatArithmetic(current_instruction_) ||
         vector_isa::isVectorLoad(current_instruction_) ||
         vector_isa::isVectorStore(current_instruction_))
     {

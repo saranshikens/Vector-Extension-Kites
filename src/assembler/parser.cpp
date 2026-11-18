@@ -504,6 +504,18 @@ void Parser::parseTextDirective()
                     break;
                 }
 
+                case instruction_set::SyntaxType::O_VREG_C_VREG_C_FPR:
+                {
+                    valid_syntax = parse_O_VREG_C_VREG_C_FPR();
+                    break;
+                }
+
+                case instruction_set::SyntaxType::O_VREG_C_FPR_C_VREG:
+                {
+                    valid_syntax = parse_O_VREG_C_FPR_C_VREG();
+                    break;
+                }
+
                 default:
                 {
                     break;

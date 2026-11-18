@@ -378,7 +378,7 @@ static const std::unordered_set<std::string> valid_instructions = {
     "fcvt.d.wu", "fcvt.l.d", "fcvt.lu.d", "fmv.x.d", "fcvt.d.l", "fcvt.d.lu", "fmv.d.x",
 
     // Vector
-    "vadd.vv", "vsub.vv", "vmul.vv", "vdot.vv", "vle64.v", "vse64.v", "vsetvli"
+    "vadd.vv", "vsub.vv", "vmul.vv", "vdot.vv", "vfdiv.vf", "vfnmsac.vf", "vle64.v", "vse64.v", "vsetvli"
 
 };
 
@@ -976,6 +976,8 @@ std::unordered_map<std::string, std::vector<SyntaxType>> instruction_syntax_map 
     {"vsub.vv", {SyntaxType::O_VREG_C_VREG_C_VREG}},
     {"vmul.vv", {SyntaxType::O_VREG_C_VREG_C_VREG}},
     {"vdot.vv", {SyntaxType::O_GPR_C_VREG_C_VREG}},
+    {"vfdiv.vf", {SyntaxType::O_VREG_C_VREG_C_FPR}},
+    {"vfnmsac.vf", {SyntaxType::O_VREG_C_FPR_C_VREG}},
     {"vle64.v", {SyntaxType::O_VREG_C_LP_GPR_RP}},
     {"vse64.v", {SyntaxType::O_VREG_C_LP_GPR_RP}},
     {"vsetvli", {SyntaxType::O_GPR_C_GPR_C_VTYPE}}

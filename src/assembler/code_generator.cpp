@@ -16,6 +16,7 @@ namespace Kites
 {
 static bool isVectorArithmeticMnemonic(const std::string &opcode);
 static bool isVectorDotMnemonic(const std::string &opcode);
+static bool isVectorFloatMnemonic(const std::string &opcode);
 static uint32_t extractRegisterIndex(const std::string &reg);
 uint32_t generateVectorDotMachineCode(const ICUnit &block);
 static bool isVectorDotMnemonic(const std::string &opcode)
@@ -58,6 +59,19 @@ printIntermediateCode(const std::vector<std::pair<ICUnit, bool>> &IntermediateCo
         {
             code = block.getOpcode() + " " + block.getRd() + ", " +
                 block.getRs1() + ", " + block.getRs2();
+        }
+        else if (isVectorFloatMnemonic(block.getOpcode()))
+        {
+            if (block.getOpcode() == "vfdiv.vf")
+            {
+                code = block.getOpcode() + " " + block.getRd() + ", " +
+                    block.getRs2() + ", " + block.getRs1();
+            }
+            else
+            {
+                code = block.getOpcode() + " " + block.getRd() + ", " +
+                    block.getRs1() + ", " + block.getRs2();
+            }
         }
         else if (isVectorArithmeticMnemonic(block.getOpcode()))
         {
@@ -188,6 +202,24 @@ uint32_t generateVectorArithmeticMachineCode(const ICUnit &block)
     machineCode |= opcode;
 
     return machineCode;
+}
+
+
+static bool isVectorFloatMnemonic(const std::string &opcode)
+{
+    return opcode == "vfdiv.vf" || opcode == "vfnmsac.vf";
+}
+
+uint32_t generateVectorFloatMachineCode(const ICUnit &block)
+{
+    const uint32_t vd = extractRegisterIndex(block.getRd());
+    const uint32_t fs1 = extractRegisterIndex(block.getRs1());
+    const uint32_t vs2 = extractRegisterIndex(block.getRs2());
+    const uint32_t funct6 = block.getOpcode() == "vfdiv.vf" ? 0b100000 : 0b101111;
+    constexpr uint32_t opcode = 0x57;
+    constexpr uint32_t funct3 = 0b101; // OPFVF
+    return (funct6 << 26) | (vs2 << 20) | (fs1 << 15) |
+           (funct3 << 12) | (vd << 7) | opcode;
 }
 
 static bool isVectorMemoryMnemonic(const std::string &opcode)
@@ -534,6 +566,10 @@ generateMachineCode(const std::vector<std::pair<ICUnit, bool>> &IntermediateCode
         else if (isVectorDotMnemonic(block.getOpcode()))
         {
             code = generateVectorDotMachineCode(block);
+        }
+        else if (isVectorFloatMnemonic(block.getOpcode()))
+        {
+            code = generateVectorFloatMachineCode(block);
         }
         else if (isVectorArithmeticMnemonic(block.getOpcode()))
         {

@@ -79,6 +79,102 @@ namespace alu
 }
 
 
+
+/**
+ * @brief Executes vector-scalar double-precision floating-point operations.
+ *
+ * The vector registers contain raw 64-bit IEEE-754 double representations.
+ * The scalar operand is also supplied as a raw 64-bit floating-point value.
+ *
+ * Supported operations:
+ *
+ * FDIV_D:
+ *     result[i] = vector_operand[i] / scalar_operand
+ *
+ * FNMSUB_D:
+ *     result[i] = -(scalar_operand * vector_operand[i])
+ *                  + accumulator[i]
+ *
+ * @param op The floating-point ALU operation.
+ * @param vector_operand Vector source operand (vs2).
+ * @param scalar_operand Scalar floating-point source operand (f[rs1]).
+ * @param accumulator Old destination vector (vd), used by FNMSUB_D.
+ * @return Vector containing the resulting 64-bit floating-point values.
+ */
+[[nodiscard]] std::vector<uint64_t> Alu::executeVectorFloatScalar(
+    AluOp op,
+    const std::vector<uint64_t>& vector_operand,
+    uint64_t scalar_operand,
+    const std::vector<uint64_t>& accumulator)
+{
+    if (op != AluOp::FDIV_D && op != AluOp::FNMSUB_D)
+    {
+        throw std::invalid_argument(
+            "Unsupported vector floating-point scalar operation.");
+    }
+
+    if (op == AluOp::FNMSUB_D &&
+        accumulator.size() != vector_operand.size())
+    {
+        throw std::invalid_argument(
+            "Vector accumulator must have the same length as the source.");
+    }
+
+    std::vector<uint64_t> result;
+    result.reserve(vector_operand.size());
+
+    for (size_t i = 0; i < vector_operand.size(); ++i)
+    {
+        uint64_t lane_result = 0;
+
+        if (op == AluOp::FDIV_D)
+        {
+            // vfdiv.vf:
+            // vd[i] = vs2[i] / f[rs1]
+            //
+            // dfpexecute(FDIV_D) computes its first operand
+            // divided by its second operand.
+
+            lane_result = Alu::dfpexecute(
+                AluOp::FDIV_D,
+                vector_operand[i],
+                scalar_operand,
+                0,
+                0
+            ).first;
+        }
+        else
+        {
+            // vfnmsac.vf:
+            // vd[i] = -(f[rs1] * vs2[i]) + old_vd[i]
+            //
+            // FNMSUB_D already implements:
+            // std::fma(-a, b, c)
+            //
+            // Passing:
+            // a = scalar_operand
+            // b = vector_operand[i]
+            // c = accumulator[i]
+            //
+            // gives the required fused operation.
+
+            lane_result = Alu::dfpexecute(
+                AluOp::FNMSUB_D,
+                scalar_operand,
+                vector_operand[i],
+                accumulator[i],
+                0
+            ).first;
+        }
+
+        result.push_back(lane_result);
+    }
+
+    return result;
+}
+
+
+
 [[nodiscard]] std::pair<uint64_t, bool> Alu::execute(AluOp op, uint64_t a, uint64_t b)
 {
     switch (op)
