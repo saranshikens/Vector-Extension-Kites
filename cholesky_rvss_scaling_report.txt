@@ -1,0 +1,67 @@
+KITES RVSS CHOLESKY SCALING BENCHMARK
+=====================================
+
+Purpose
+-------
+Measure scalar versus vector Cholesky kernels as matrix dimension
+increases. Every input runs on the RVSS processor. Results are
+simulator counters, not wall-clock timings.
+
+Methodology
+-----------
+Dimensions: 2, 3, 4, 5, 6, 8.
+Samples per dimension: 1
+Input cases: 6 independently seeded inputs. Inputs are deterministic.
+Seed formula: 20261108 + N*10000 + sample; sample is zero-based.
+Each input is generated as A=L*transpose(L), with integral lower
+triangular factors, diagonal entries in [2,4], and off-diagonal
+entries in [-2,2]. Matrix storage is column-major. Both computed
+factors are checked against the generated factor for every run.
+Average speedup is the arithmetic mean of per-input scalar_cycles /
+vector_cycles. The ratio of mean cycles is also reported. Instruction
+speedup is calculated the same way using retired instruction counts.
+Build preset: test (C++20, Qt 6.9.3, MinGW GCC 13.1.0).
+Observed benchmark runtime: 15.5 seconds.
+Memory bases: A=0x2000, L=0x3000.
+Set KITES_RVSS_CHOLESKY_SAMPLES before running the test to change
+the sample count; the default used here is 3.
+Inputs and measured counters are included in the CSV below.
+
+Summary: mean simulator cycles and mean per-input speedup
+---------------------------------------------------------
+Method,N,Samples,Scalar_mean_cycles,Vector_mean_cycles,Mean_individual_cycle_speedup,Speedup_of_mean_cycles,Scalar_mean_instructions,Vector_mean_instructions,Mean_individual_instruction_speedup
+cholesky_rvss,2,1,19.0000,30.0000,0.6333,0.6333,19.0000,30.0000,0.6333
+cholesky_rvss,3,1,46.0000,64.0000,0.7188,0.7188,46.0000,64.0000,0.7188
+cholesky_rvss,4,1,94.0000,109.0000,0.8624,0.8624,94.0000,109.0000,0.8624
+cholesky_rvss,5,1,169.0000,165.0000,1.0242,1.0242,169.0000,165.0000,1.0242
+cholesky_rvss,6,1,277.0000,232.0000,1.1940,1.1940,277.0000,232.0000,1.1940
+cholesky_rvss,8,1,616.0000,399.0000,1.5439,1.5439,616.0000,399.0000,1.5439
+
+Interpretation highlights
+-------------------------
+At N=8, the average cycle speedup is 1.5439x. Values above 1.0 mean the vector implementation used fewer
+cycles; values below 1.0 mean it was slower. The complete table
+shows how the speedup changes as matrix dimension increases.
+
+Per-input raw measurements (CSV)
+--------------------------------
+method,dimension,sample,seed,scalar_instructions,vector_instructions,scalar_cycles,vector_cycles,cycle_speedup,instruction_speedup
+cholesky_rvss,2,0,20281108,19,30,19,30,0.6333,0.6333
+cholesky_rvss,3,0,20291108,46,64,46,64,0.7188,0.7188
+cholesky_rvss,4,0,20301108,94,109,94,109,0.8624,0.8624
+cholesky_rvss,5,0,20311108,169,165,169,165,1.0242,1.0242
+cholesky_rvss,6,0,20321108,277,232,277,232,1.1940,1.1940
+cholesky_rvss,8,0,20341108,616,399,616,399,1.5439,1.5439
+
+Notes and interpretation
+------------------------
+Speedup above 1.0 means the vector implementation used fewer cycles
+(or instructions) than its scalar counterpart; below 1.0 means it
+was slower. Per-input speedups are averaged so that each generated
+matrix has equal weight. Cycle counts include instruction execution
+and memory activity in this simulator. Results are specific to the
+RVSS simulator, these kernels, and the tested dimensions; they are
+not hardware timing claims. Regenerate with:
+
+    cmake --build --preset test --target kites_vector_test
+    ctest --preset test -R RVSSCholeskyScaling
