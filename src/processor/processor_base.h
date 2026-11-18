@@ -60,6 +60,15 @@ struct MemoryChange
     std::vector<uint8_t> new_bytes_vec;
 };
 
+
+struct VectorRegisterChange
+{
+    unsigned int reg_index{};
+    std::vector<uint64_t> old_values;
+    std::vector<uint64_t> new_values;
+};
+
+
 struct StepDelta
 {
     uint64_t old_pc{};
@@ -76,6 +85,14 @@ struct StepDelta
     unsigned int new_branch_mispredictions{};
     std::vector<RegisterChange> register_changes{};
     std::vector<MemoryChange> memory_changes{};
+
+    std::vector<VectorRegisterChange> vector_register_changes{};
+
+    size_t old_vector_length{};
+    size_t new_vector_length{};
+
+    bool vector_length_changed{};
+
 };
 
 /**

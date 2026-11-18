@@ -106,7 +106,7 @@ qt_add_executable(${PROJECT_NAME}
     ${APP_RESOURCES}
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "Kites")
-target_link_libraries(${PROJECT_NAME} PRIVATE kites_core)
+target_link_libraries(${PROJECT_NAME} PRIVATE kites_core_cli)
 
 include(GNUInstallDirs)
 

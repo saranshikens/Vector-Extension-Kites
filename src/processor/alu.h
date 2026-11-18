@@ -10,6 +10,8 @@
 #include <cmath>
 #include <cstdint>
 #include <ostream>
+#include <vector>
+#include <utility>
 
 // #pragma float_control(precise, on)
 // #pragma STDC FENV_ACCESS ON
@@ -367,6 +369,17 @@ class Alu
      * @return A pair (result, overflow_flag).
      */
     [[nodiscard]] static std::pair<uint64_t, bool> execute(AluOp op, uint64_t a, uint64_t b);
+
+
+    // Vector arithmetic operations.
+    [[nodiscard]] static std::vector<uint64_t> executeVector(
+        AluOp op,
+        const std::vector<uint64_t> &a,
+        const std::vector<uint64_t> &b);
+
+    [[nodiscard]] static uint64_t executeVectorDot(
+        const std::vector<uint64_t> &a,
+        const std::vector<uint64_t> &b);
 
     // TODO: check all the floating point operations
 

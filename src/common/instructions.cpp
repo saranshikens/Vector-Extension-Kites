@@ -977,8 +977,8 @@ std::unordered_map<std::string, std::vector<SyntaxType>> instruction_syntax_map 
     {"vmul.vv", {SyntaxType::O_VREG_C_VREG_C_VREG}},
     {"vdot.vv", {SyntaxType::O_GPR_C_VREG_C_VREG}},
     {"vle64.v", {SyntaxType::O_VREG_C_LP_GPR_RP}},
-    {"vse64.v", {SyntaxType::O_VREG_C_LP_GPR_RP}}
-
+    {"vse64.v", {SyntaxType::O_VREG_C_LP_GPR_RP}},
+    {"vsetvli", {SyntaxType::O_GPR_C_GPR_C_VTYPE}}
 };
 
 bool isValidInstruction(const std::string &instruction)

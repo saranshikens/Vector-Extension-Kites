@@ -4,6 +4,7 @@
  * @author Vishank Singh, https://github.com/VishankSingh
  */
 
+#include "processor/vector_isa.h"
 #include "processor/rvss/rvss_processor.h"
 
 #include "common/instructions.h"
@@ -13,6 +14,7 @@
 #include "utils/utils.h"
 #include <QDebug>
 #include <algorithm>
+#include <stdexcept>
 #include <atomic>
 #include <cctype>
 #include <condition_variable>
@@ -183,6 +185,112 @@ void RVSSProcessor::Execute()
         HandleSyscall();
         return;
     }
+
+
+    // ============================================================
+    // RVSS VECTOR INSTRUCTION EXECUTION
+    // ============================================================
+
+    if (vector_isa::opcode(current_instruction_) ==
+        vector_isa::OPCODE_VECTOR)
+    {
+        const uint8_t vd = vector_isa::vd(current_instruction_);
+        const uint8_t vs1 = vector_isa::vs1(current_instruction_);
+        const uint8_t vs2 = vector_isa::vs2(current_instruction_);
+
+        // vsetvli
+        if (vector_isa::isVectorConfiguration(current_instruction_))
+        {
+            if (!vector_isa::isSupportedVType(current_instruction_))
+            {
+                throw std::runtime_error(
+                    "Unsupported vsetvli type. Expected e64,m1.");
+            }
+
+            const uint64_t avl = registers_.ReadGpr(vs1);
+
+            const size_t old_vl = registers_.GetVectorLength();
+
+            const size_t vl = avl == 0
+                ? vector_isa::MAX_VECTOR_LANES
+                : std::min<uint64_t>(
+                    avl, vector_isa::MAX_VECTOR_LANES);
+
+            registers_.SetVectorLength(vl);
+
+            current_delta_.old_vector_length = old_vl;
+            current_delta_.new_vector_length = vl;
+            current_delta_.vector_length_changed = old_vl != vl;
+
+            execution_result_ = vl;
+
+            return;
+        }
+
+        // vdot.vv
+        if (vector_isa::isVectorDot(current_instruction_))
+        {
+            execution_result_ = alu::Alu::executeVectorDot(
+                registers_.ReadVectorRegister(vs1),
+                registers_.ReadVectorRegister(vs2));
+
+            return;
+        }
+
+        // vadd.vv, vsub.vv, vmul.vv
+        const auto operation =
+            vector_isa::decodeArithmetic(current_instruction_);
+
+        if (operation != vector_isa::VectorOperation::INVALID)
+        {
+            alu::AluOp alu_op = alu::AluOp::NONE;
+
+            switch (operation)
+            {
+            case vector_isa::VectorOperation::ADD:
+                alu_op = alu::AluOp::ADD;
+                break;
+
+            case vector_isa::VectorOperation::SUB:
+                alu_op = alu::AluOp::SUB;
+                break;
+
+            case vector_isa::VectorOperation::MUL:
+                alu_op = alu::AluOp::MUL;
+                break;
+
+            default:
+                break;
+            }
+
+            const auto result = alu::Alu::executeVector(
+                alu_op,
+                registers_.ReadVectorRegister(vs1),
+                registers_.ReadVectorRegister(vs2));
+
+            const auto old_values =
+                registers_.ReadVectorRegister(vd);
+
+            registers_.WriteVectorRegister(vd, result);
+
+            current_delta_.vector_register_changes.push_back(
+                {vd, old_values, result});
+
+            return;
+        }
+    }
+
+    // Vector load/store effective address calculation.
+    if (vector_isa::isVectorLoad(current_instruction_) ||
+        vector_isa::isVectorStore(current_instruction_))
+    {
+        const uint8_t base = vector_isa::vs1(current_instruction_);
+
+        execution_result_ = registers_.ReadGpr(base);
+
+        return;
+    }
+
 
     if (instruction_set::isFInstruction(current_instruction_))
     { // RV64 F
@@ -626,6 +734,84 @@ void RVSSProcessor::WriteMemory()
         return;
     }
 
+
+    // ============================================================
+    // RVSS VECTOR MEMORY OPERATIONS
+    // ============================================================
+
+    if (vector_isa::isVectorLoad(current_instruction_) ||
+        vector_isa::isVectorStore(current_instruction_))
+    {
+        const uint8_t vector_reg =
+            vector_isa::vd(current_instruction_);
+
+        const size_t lanes = registers_.GetVectorLength();
+
+        const uint64_t base =
+            static_cast<uint64_t>(execution_result_);
+
+        if (vector_isa::isVectorLoad(current_instruction_))
+        {
+            const auto old_values =
+                registers_.ReadVectorRegister(vector_reg);
+
+            std::vector<uint64_t> new_values;
+            new_values.reserve(lanes);
+
+            for (size_t lane = 0; lane < lanes; ++lane)
+            {
+                new_values.push_back(
+                    memory_controller_.readDoubleWord(base + lane * 8));
+            }
+
+            registers_.WriteVectorRegister(vector_reg, new_values);
+
+            current_delta_.vector_register_changes.push_back(
+                {vector_reg, old_values, new_values});
+        }
+        else
+        {
+            const auto values =
+                registers_.ReadVectorRegister(vector_reg);
+
+            std::vector<uint8_t> old_bytes;
+            std::vector<uint8_t> new_bytes;
+
+            old_bytes.reserve(lanes * 8);
+            new_bytes.reserve(lanes * 8);
+
+            for (size_t lane = 0; lane < lanes; ++lane)
+            {
+                const uint64_t address = base + lane * 8;
+
+                for (size_t byte = 0; byte < 8; ++byte)
+                {
+                    old_bytes.push_back(
+                        memory_controller_.peekByte(address + byte));
+                }
+
+                memory_controller_.writeDoubleWord(
+                    address, values[lane]);
+
+                for (size_t byte = 0; byte < 8; ++byte)
+                {
+                    new_bytes.push_back(
+                        memory_controller_.peekByte(address + byte));
+                }
+            }
+
+            if (old_bytes != new_bytes)
+            {
+                current_delta_.memory_changes.push_back(
+                    {base, old_bytes, new_bytes});
+            }
+        }
+
+        return;
+    }
+
+
+
     if (instruction_set::isFInstruction(current_instruction_))
     { // RV64 F
         WriteMemoryFloat();
@@ -830,6 +1016,40 @@ void RVSSProcessor::WriteBack()
     {
         return;
     }
+
+
+    // ============================================================
+    // RVSS VECTOR WRITEBACK
+    // ============================================================
+
+    if (vector_isa::isVectorConfiguration(current_instruction_) ||
+        vector_isa::isVectorDot(current_instruction_))
+    {
+        const uint8_t rd = (current_instruction_ >> 7) & 0x1F;
+
+        const uint64_t old_value = registers_.ReadGpr(rd);
+
+        registers_.WriteGpr(
+            rd, static_cast<uint64_t>(execution_result_));
+
+        const uint64_t new_value = registers_.ReadGpr(rd);
+
+        if (old_value != new_value)
+        {
+            current_delta_.register_changes.push_back(
+                {rd, 0, old_value, new_value});
+        }
+
+        return;
+    }
+
+    if (vector_isa::isVectorArithmetic(current_instruction_) ||
+        vector_isa::isVectorLoad(current_instruction_) ||
+        vector_isa::isVectorStore(current_instruction_))
+    {
+        return;
+    }
+
 
     if (instruction_set::isFInstruction(current_instruction_))
     { // RV64 F
@@ -1230,6 +1450,21 @@ void RVSSProcessor::Undo()
         }
     }
 
+
+
+    for (const auto &change : last.vector_register_changes)
+    {
+        registers_.WriteVectorRegister(
+            change.reg_index,
+            change.old_values);
+    }
+
+    if (last.vector_length_changed)
+    {
+        registers_.SetVectorLength(last.old_vector_length);
+    }
+
+
     for (const auto &change : last.memory_changes)
     {
         for (size_t i = 0; i < change.old_bytes_vec.size(); ++i)
@@ -1302,6 +1537,20 @@ void RVSSProcessor::Redo()
         }
     }
 
+
+    for (const auto &change : next.vector_register_changes)
+    {
+        registers_.WriteVectorRegister(
+            change.reg_index,
+            change.new_values);
+    }
+
+    if (next.vector_length_changed)
+    {
+        registers_.SetVectorLength(next.new_vector_length);
+    }
+
+
     for (const auto &change : next.memory_changes)
     {
         for (size_t i = 0; i < change.new_bytes_vec.size(); ++i)
@@ -1347,6 +1596,11 @@ void RVSSProcessor::Reset()
     current_delta_.memory_changes.clear();
     current_delta_.old_pc = 0;
     current_delta_.new_pc = 0;
+    current_delta_.vector_register_changes.clear();
+
+    current_delta_.vector_length_changed = false;
+    current_delta_.old_vector_length = 0;
+    current_delta_.new_vector_length = 0;
     undo_stack_ = std::stack<StepDelta>();
     redo_stack_ = std::stack<StepDelta>();
 }

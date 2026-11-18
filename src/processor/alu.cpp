@@ -9,11 +9,75 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <stdexcept>
+#include <vector>
 
 namespace Kites
 {
 namespace alu
 {
+
+
+
+[[nodiscard]] std::vector<uint64_t> Alu::executeVector(
+    AluOp op,
+    const std::vector<uint64_t>& a,
+    const std::vector<uint64_t>& b)
+{
+    if (a.size() != b.size())
+    {
+        throw std::invalid_argument(
+            "Vector operands must have equal lengths.");
+    }
+
+    std::vector<uint64_t> result;
+    result.reserve(a.size());
+
+    for (size_t i = 0; i < a.size(); ++i)
+    {
+        switch (op)
+        {
+        case AluOp::ADD:
+            result.push_back(a[i] + b[i]);
+            break;
+
+        case AluOp::SUB:
+            result.push_back(a[i] - b[i]);
+            break;
+
+        case AluOp::MUL:
+            result.push_back(a[i] * b[i]);
+            break;
+
+        default:
+            throw std::invalid_argument(
+                "Unsupported vector ALU operation.");
+        }
+    }
+
+    return result;
+}
+
+[[nodiscard]] uint64_t Alu::executeVectorDot(
+    const std::vector<uint64_t>& a,
+    const std::vector<uint64_t>& b)
+{
+    if (a.size() != b.size())
+    {
+        throw std::invalid_argument(
+            "Vector operands must have equal lengths.");
+    }
+
+    uint64_t result = 0;
+
+    for (size_t i = 0; i < a.size(); ++i)
+    {
+        result += a[i] * b[i];
+    }
+
+    return result;
+}
+
 
 [[nodiscard]] std::pair<uint64_t, bool> Alu::execute(AluOp op, uint64_t a, uint64_t b)
 {
