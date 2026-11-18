@@ -4,11 +4,13 @@ find_package(Threads REQUIRED)
 option(VM_DEBUG_PRINTS "Enable debug prints in VM during tests" OFF)
 option(ENABLE_COVERAGE "Enable coverage instrumentation for tests" OFF)
 
-file(GLOB_RECURSE TEST_FILES CONFIGURE_DEPENDS "*.cpp")
-
-add_executable(kites_test
-    ${TEST_FILES}
+file(GLOB_RECURSE TEST_FILES CONFIGURE_DEPENDS
+    "*.cpp"
 )
+
+list(FILTER TEST_FILES EXCLUDE REGEX "/vector_tests/")
+
+add_executable(kites_test ${TEST_FILES})
 
 target_include_directories(kites_test PRIVATE
     "${CMAKE_SOURCE_DIR}/src"
@@ -115,3 +117,5 @@ if(ENABLE_COVERAGE)
         COMMENT "Running tests and generating coverage report"
     )
 endif()
+
+add_subdirectory(vector_tests)
