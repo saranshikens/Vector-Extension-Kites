@@ -1,0 +1,16 @@
+========================================
+       8x8 CHOLESKY BENCHMARK RESULTS
+========================================
+
+SCALAR RVSS
+Instructions : 3067
+Cycles       : 3067
+
+VECTOR RVSS
+Instructions : 644
+Cycles       : 644
+
+COMPARISON
+Instruction reduction : 79.0023%
+Cycle reduction       : 79.0023%
+========================================
