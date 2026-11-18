@@ -211,10 +211,12 @@ void RVSSProcessor::Execute()
 
             const size_t old_vl = registers_.GetVectorLength();
 
-            const size_t vl = avl == 0
-                ? vector_isa::MAX_VECTOR_LANES
+            const size_t vl = vs1 == 0
+                ? (vd == 0
+                       ? old_vl
+                       : vector_isa::MAX_VECTOR_LANES)
                 : std::min<uint64_t>(
-                    avl, vector_isa::MAX_VECTOR_LANES);
+                      avl, vector_isa::MAX_VECTOR_LANES);
 
             registers_.SetVectorLength(vl);
 
