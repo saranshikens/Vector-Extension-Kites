@@ -1,8 +1,11 @@
+
 set(VECTOR_TEST_FILES
     vector_config_test.cpp
     vector_arithmetic_test.cpp
     vector_dot_test.cpp
     vector_memory_test.cpp
+    matrix_multiply_rvss_test.cpp
+    matrix_multiply_scaling_test.cpp
 )
 
 add_executable(kites_vector_test

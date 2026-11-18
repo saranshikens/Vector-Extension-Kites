@@ -1,0 +1,5 @@
+Dimension,Scalar Instructions,Vector Instructions,Scalar Cycles,Vector Cycles,Instruction Reduction (%),Cycle Reduction (%),Cycle Speedup (x)
+2x2,45,40,45,40,11.11,11.11,1.12
+4x4,293,158,293,158,46.08,46.08,1.85
+8x8,2181,634,2181,634,70.93,70.93,3.44
+12x12,7205,1430,7205,1430,80.15,80.15,5.04
