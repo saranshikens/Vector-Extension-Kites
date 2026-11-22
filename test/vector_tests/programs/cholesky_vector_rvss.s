@@ -1,4 +1,3 @@
-
 # ============================================================
 # 8x8 VECTORIZED CHOLESKY DECOMPOSITION - RVSS
 #

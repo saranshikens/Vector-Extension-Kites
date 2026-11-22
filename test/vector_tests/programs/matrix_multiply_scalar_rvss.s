@@ -1,4 +1,3 @@
-
 # Scalar 4x4 matrix multiplication on RVSS.
 #
 # A:          0x2000 (row-major)
