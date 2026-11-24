@@ -1,5 +1,7 @@
 set(VECTOR_TEST_FILES
-    cholesky_rvss_test.cpp
+    instruction_correctness_single_cycle/single_cycle_vector_correctness_test.cpp
+    instruction_correctness_pipelined/pipelined_vector_correctness_test.cpp
+    scalar_vector_comparison/scalar_vector_comparison_test.cpp
 )
 
 add_executable(kites_vector_test

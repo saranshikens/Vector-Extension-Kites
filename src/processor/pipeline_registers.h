@@ -55,6 +55,7 @@ struct ID_EX_Register
     // --- Vector Register Data ---
     std::vector<uint64_t> vreg1_data {};
     std::vector<uint64_t> vreg2_data {};
+    std::vector<uint64_t> vmask_data {};
 
     // --- Vector Register Indices ---
     uint8_t vrs1 {0};
@@ -98,6 +99,7 @@ struct ID_EX_Register
 
         vreg1_data.clear();
         vreg2_data.clear();
+        vmask_data.clear();
 
         vrs1 = 0;
         vrs2 = 0;

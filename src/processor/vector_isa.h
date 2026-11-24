@@ -3,6 +3,9 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <algorithm>
+#include <stdexcept>
+#include <vector>
 
 namespace Kites
 {
@@ -13,8 +16,128 @@ constexpr uint8_t OPCODE_VECTOR       = 0x57;
 constexpr uint8_t OPCODE_VECTOR_LOAD  = 0x07;
 constexpr uint8_t OPCODE_VECTOR_STORE = 0x27;
 
-constexpr uint8_t VTYPE_E64_M1 = 0x18;
 constexpr size_t MAX_VECTOR_LANES = 64;
+
+enum class VectorSew
+{
+    E8,
+    E16,
+    E32,
+    E64
+};
+
+enum class VectorLmul
+{
+    MF8,
+    MF4,
+    MF2,
+    M1,
+    M2,
+    M4,
+    M8
+};
+
+struct VectorConfig
+{
+    VectorSew sew {VectorSew::E64};
+    VectorLmul lmul {VectorLmul::M1};
+    bool tail_agnostic {false};
+    bool mask_agnostic {false};
+};
+
+inline uint8_t sewBits(uint16_t vtype)
+{
+    return static_cast<uint8_t>((vtype >> 3) & 0x7);
+}
+
+inline uint8_t lmulBits(uint16_t vtype)
+{
+    return static_cast<uint8_t>(vtype & 0x7);
+}
+
+inline bool tailAgnostic(uint16_t vtype)
+{
+    return ((vtype >> 6) & 0x1) != 0;
+}
+
+inline bool maskAgnostic(uint16_t vtype)
+{
+    return ((vtype >> 7) & 0x1) != 0;
+}
+
+inline bool isMaskedInstruction(uint32_t instruction)
+{
+    return ((instruction >> 25) & 0x1) == 0;
+}
+
+inline bool isMaskSet(const std::vector<uint64_t>& mask, size_t lane)
+{
+    if (mask.empty())
+        return true;
+    return ((mask[lane / 64] >> (lane % 64)) & 1) != 0;
+}
+
+inline size_t vlmax(const VectorConfig& config)
+{
+    size_t bits_per_lane = 64;
+    switch (config.sew)
+    {
+    case VectorSew::E8: bits_per_lane = 8; break;
+    case VectorSew::E16: bits_per_lane = 16; break;
+    case VectorSew::E32: bits_per_lane = 32; break;
+    case VectorSew::E64: bits_per_lane = 64; break;
+    }
+
+    size_t lmul_numerator = 1;
+    size_t lmul_denominator = 1;
+    switch (config.lmul)
+    {
+    case VectorLmul::MF8: lmul_denominator = 8; break;
+    case VectorLmul::MF4: lmul_denominator = 4; break;
+    case VectorLmul::MF2: lmul_denominator = 2; break;
+    case VectorLmul::M1: break;
+    case VectorLmul::M2: lmul_numerator = 2; break;
+    case VectorLmul::M4: lmul_numerator = 4; break;
+    case VectorLmul::M8: lmul_numerator = 8; break;
+    }
+
+    const size_t base_lanes =
+        (MAX_VECTOR_LANES * 64) / bits_per_lane;
+    return std::min(MAX_VECTOR_LANES,
+                    base_lanes * lmul_numerator / lmul_denominator);
+}
+
+inline VectorConfig decodeVType(uint16_t vtype)
+{
+    VectorConfig config;
+
+    switch (sewBits(vtype))
+    {
+    case 0b000: config.sew = VectorSew::E8; break;
+    case 0b001: config.sew = VectorSew::E16; break;
+    case 0b010: config.sew = VectorSew::E32; break;
+    case 0b011: config.sew = VectorSew::E64; break;
+    default:
+        throw std::invalid_argument("Unsupported vsew encoding");
+    }
+
+    switch (lmulBits(vtype))
+    {
+    case 0b101: config.lmul = VectorLmul::MF8; break;
+    case 0b110: config.lmul = VectorLmul::MF4; break;
+    case 0b111: config.lmul = VectorLmul::MF2; break;
+    case 0b000: config.lmul = VectorLmul::M1; break;
+    case 0b001: config.lmul = VectorLmul::M2; break;
+    case 0b010: config.lmul = VectorLmul::M4; break;
+    case 0b011: config.lmul = VectorLmul::M8; break;
+    default:
+        throw std::invalid_argument("Reserved vlmul encoding");
+    }
+
+    config.tail_agnostic = tailAgnostic(vtype);
+    config.mask_agnostic = maskAgnostic(vtype);
+    return config;
+}
 
 inline uint8_t opcode(uint32_t instruction)
 {
@@ -65,7 +188,16 @@ inline uint16_t vtypeImmediate(uint32_t instruction)
 
 inline bool isSupportedVType(uint32_t instruction)
 {
-    return vtypeImmediate(instruction) == VTYPE_E64_M1;
+    const uint16_t vtype = vtypeImmediate(instruction);
+    try
+    {
+        (void)decodeVType(vtype);
+        return true;
+    }
+    catch (const std::invalid_argument&)
+    {
+        return false;
+    }
 }
 
 inline bool isVectorLoad(uint32_t instruction)

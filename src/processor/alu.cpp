@@ -58,6 +58,49 @@ namespace alu
     return result;
 }
 
+[[nodiscard]] std::vector<uint64_t> Alu::executeVectorMasked(
+    AluOp op,
+    const std::vector<uint64_t>& a,
+    const std::vector<uint64_t>& b,
+    const std::vector<uint64_t>& mask,
+    const std::vector<uint64_t>& destination,
+    size_t active_length)
+{
+    if (a.size() != b.size() ||
+        destination.size() != a.size())
+    {
+        throw std::invalid_argument(
+            "Masked vector operands must have equal lengths.");
+    }
+
+    std::vector<uint64_t> result = destination;
+    for (size_t i = 0; i < active_length && i < a.size(); ++i)
+    {
+        if (!mask.empty() &&
+            ((mask[i / 64] >> (i % 64)) & 1) == 0)
+        {
+            continue;
+        }
+
+        switch (op)
+        {
+        case AluOp::ADD:
+            result[i] = a[i] + b[i];
+            break;
+        case AluOp::SUB:
+            result[i] = a[i] - b[i];
+            break;
+        case AluOp::MUL:
+            result[i] = a[i] * b[i];
+            break;
+        default:
+            throw std::invalid_argument(
+                "Unsupported vector ALU operation.");
+        }
+    }
+    return result;
+}
+
 [[nodiscard]] uint64_t Alu::executeVectorDot(
     const std::vector<uint64_t>& a,
     const std::vector<uint64_t>& b)

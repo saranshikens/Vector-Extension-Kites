@@ -54,6 +54,16 @@ size_t RegisterFile::GetVectorLength() const
     return vector_length_;
 }
 
+void RegisterFile::SetVectorConfig(const vector_isa::VectorConfig& config)
+{
+    vector_config_ = config;
+}
+
+const vector_isa::VectorConfig& RegisterFile::GetVectorConfig() const
+{
+    return vector_config_;
+}
+
 uint64_t RegisterFile::ReadVectorLane(
     size_t reg, size_t lane) const
 {

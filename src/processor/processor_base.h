@@ -92,6 +92,8 @@ struct StepDelta
     size_t new_vector_length{};
 
     bool vector_length_changed{};
+    vector_isa::VectorConfig old_vector_config{};
+    vector_isa::VectorConfig new_vector_config{};
 
 };
 

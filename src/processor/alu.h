@@ -377,6 +377,14 @@ class Alu
         const std::vector<uint64_t> &a,
         const std::vector<uint64_t> &b);
 
+    [[nodiscard]] static std::vector<uint64_t> executeVectorMasked(
+        AluOp op,
+        const std::vector<uint64_t>& a,
+        const std::vector<uint64_t>& b,
+        const std::vector<uint64_t>& mask,
+        const std::vector<uint64_t>& destination,
+        size_t active_length);
+
     [[nodiscard]] static uint64_t executeVectorDot(
         const std::vector<uint64_t> &a,
         const std::vector<uint64_t> &b);

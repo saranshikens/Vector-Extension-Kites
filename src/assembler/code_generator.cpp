@@ -7,6 +7,7 @@
 
 #include "code_generator.h"
 #include "common/instructions.h"
+#include "processor/vector_isa.h"
 
 #include <stdexcept>
 #include <string>
@@ -138,12 +139,21 @@ uint32_t generateVectorConfigurationMachineCode(const ICUnit &block)
     const uint32_t rs1 = extractRegisterIndex(block.getRs1());
     const int64_t vtype = std::stoll(block.getImm());
 
-    // This project currently supports only e64,m1 with tail/mask agnostic
-    // policies disabled: vsew=011, vlmul=000, vta=0, vma=0 (zimm=0x18).
-    if (vtype != 0x18)
+    if (vtype < 0 || vtype > 0x7FF)
     {
         throw std::runtime_error(
-            "vsetvli currently supports only vsetvli rd, rs1, 24 (e64,m1)");
+            "vsetvli vtype must fit in the 11-bit RISC-V vtype encoding");
+    }
+
+    const uint16_t vtype_bits = static_cast<uint16_t>(vtype);
+    try
+    {
+        (void)vector_isa::decodeVType(vtype_bits);
+    }
+    catch (const std::invalid_argument &error)
+    {
+        throw std::runtime_error(
+            std::string("Unsupported vsetvli vtype: ") + error.what());
     }
 
     constexpr uint32_t opcode = 0x57;
@@ -199,6 +209,7 @@ uint32_t generateVectorArithmeticMachineCode(const ICUnit &block)
     machineCode |= (vs1 << 15);
     machineCode |= (funct3 << 12);
     machineCode |= (vd << 7);
+    machineCode |= (1 << 25); // vm=1, unmasked
     machineCode |= opcode;
 
     return machineCode;

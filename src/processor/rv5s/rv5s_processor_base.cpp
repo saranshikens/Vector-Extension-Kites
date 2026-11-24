@@ -207,6 +207,7 @@ void RV5StageVM_Base::pipeline_decode()
 
         id_ex_reg_.vreg1_data.clear();
         id_ex_reg_.vreg2_data.clear();
+        id_ex_reg_.vmask_data.clear();
 
         id_ex_reg_.vrs1 = 0;
         id_ex_reg_.vrs2 = 0;
@@ -305,10 +306,27 @@ void RV5StageVM_Base::pipeline_decode()
 
         id_ex_reg_.vreg2_data =
             registers_.ReadVectorRegister(id_ex_reg_.vrs2);
+        if (vector_isa::isMaskedInstruction(instruction))
+        {
+            id_ex_reg_.vmask_data =
+                registers_.ReadVectorRegister(0);
+        }
 
         id_ex_reg_.vreg_write = vector_isa::isVectorArithmetic(instruction);
         if (vector_isa::isVectorDot(instruction))
             id_ex_reg_.reg_write = (id_ex_reg_.rd != 0);
+    }
+    else if (vector_isa::isVectorFloatArithmetic(instruction))
+    {
+        id_ex_reg_.frs1 = vector_isa::vs1(instruction);
+        id_ex_reg_.freg1_data = registers_.ReadFpr(id_ex_reg_.frs1);
+        id_ex_reg_.vrd = vector_isa::vd(instruction);
+        id_ex_reg_.vrs2 = vector_isa::vs2(instruction);
+        id_ex_reg_.vreg1_data =
+            registers_.ReadVectorRegister(id_ex_reg_.vrs2);
+        id_ex_reg_.vreg2_data =
+            registers_.ReadVectorRegister(id_ex_reg_.vrd);
+        id_ex_reg_.vreg_write = true;
     }
 
     // Vector configuration instruction.
@@ -343,12 +361,14 @@ bool RV5StageVM_Base::pipeline_execute_vector()
 {
     const uint32_t instruction = id_ex_reg_.instruction;
 
-        const bool is_vector_config =
+    const bool is_vector_config =
         vector_isa::isVectorConfiguration(instruction);
 
     const bool is_vector_arithmetic =
         vector_isa::isVectorArithmetic(instruction);
     const bool is_vector_dot = vector_isa::isVectorDot(instruction);
+    const bool is_vector_float =
+        vector_isa::isVectorFloatArithmetic(instruction);
 
     const bool is_vector_load =
         vector_isa::isVectorLoad(instruction);
@@ -360,6 +380,7 @@ bool RV5StageVM_Base::pipeline_execute_vector()
     if (!is_vector_config &&
         !is_vector_arithmetic &&
         !is_vector_dot &&
+        !is_vector_float &&
         !is_vector_load &&
         !is_vector_store)
     {
@@ -373,6 +394,9 @@ bool RV5StageVM_Base::pipeline_execute_vector()
     ex_mem_reg_.prev_frd = ex_mem_reg_.frd;
     ex_mem_reg_.prev_mem_read = ex_mem_reg_.mem_read;
     ex_mem_reg_.prev_mem_write = ex_mem_reg_.mem_write;
+    const bool ex_freg_write = ex_mem_reg_.freg_write;
+    const uint8_t ex_frd = ex_mem_reg_.frd;
+    const uint64_t ex_falu_result = ex_mem_reg_.f_alu_result;
 
     // Initialize every EX/MEM field that a normal EX instruction would set.
     ex_mem_reg_.pc = id_ex_reg_.pc;
@@ -402,14 +426,59 @@ bool RV5StageVM_Base::pipeline_execute_vector()
     ex_mem_reg_.vector_load = false;
     ex_mem_reg_.vector_store = false;
 
+    // Vector operands are latched at decode, but older pipeline
+    // configurations execute MEM/WB before EX and may need to refresh
+    // or bypass values that become available during the current cycle.
+    if (is_vector_arithmetic || is_vector_dot)
+    {
+        id_ex_reg_.vreg1_data =
+            registers_.ReadVectorRegister(id_ex_reg_.vrs1);
+        id_ex_reg_.vreg2_data =
+            registers_.ReadVectorRegister(id_ex_reg_.vrs2);
+
+        if (mem_wb_reg_.vreg_write)
+        {
+            if (mem_wb_reg_.vrd == id_ex_reg_.vrs1)
+                id_ex_reg_.vreg1_data = mem_wb_reg_.vector_result;
+            if (mem_wb_reg_.vrd == id_ex_reg_.vrs2)
+                id_ex_reg_.vreg2_data = mem_wb_reg_.vector_result;
+        }
+    }
+    else if (is_vector_float)
+    {
+        id_ex_reg_.vreg1_data =
+            registers_.ReadVectorRegister(id_ex_reg_.vrs2);
+        id_ex_reg_.vreg2_data =
+            registers_.ReadVectorRegister(id_ex_reg_.vrd);
+
+        if (mem_wb_reg_.vreg_write)
+        {
+            if (mem_wb_reg_.vrd == id_ex_reg_.vrs2)
+                id_ex_reg_.vreg1_data = mem_wb_reg_.vector_result;
+            if (mem_wb_reg_.vrd == id_ex_reg_.vrd)
+                id_ex_reg_.vreg2_data = mem_wb_reg_.vector_result;
+        }
+
+        id_ex_reg_.freg1_data = registers_.ReadFpr(id_ex_reg_.frs1);
+        if (ex_freg_write &&
+            ex_frd == id_ex_reg_.frs1)
+        {
+            id_ex_reg_.freg1_data = ex_falu_result;
+        }
+        if (mem_wb_reg_.prev_freg_write &&
+            mem_wb_reg_.prev_frd == id_ex_reg_.frs1)
+        {
+            id_ex_reg_.freg1_data = mem_wb_reg_.prev_f_alu_result;
+        }
+    }
+
     // Custom vdot.vv: reduction of active lanes to a scalar GPR result.
     if (is_vector_dot)
     {
-        const size_t vl = registers_.GetVectorLength();
         const auto &source1 = id_ex_reg_.vreg1_data;
         const auto &source2 = id_ex_reg_.vreg2_data;
         const uint64_t result =
-            vector_isa::dotProduct(source1.data(), source2.data(), vl);
+            alu::Alu::executeVectorDot(source1, source2);
 
         ex_mem_reg_.rd = id_ex_reg_.rd;
         ex_mem_reg_.alu_result = result;
@@ -419,6 +488,51 @@ bool RV5StageVM_Base::pipeline_execute_vector()
         ex_mem_reg_.mem_read = false;
         ex_mem_reg_.mem_write = false;
         ex_mem_reg_.vreg_write = false;
+        return true;
+    }
+
+    // Vector floating-point operations with a scalar FPR operand.
+    if (is_vector_float)
+    {
+        const auto operation =
+            vector_isa::decodeVectorFloat(instruction);
+
+        std::vector<uint64_t> result;
+        if (operation == vector_isa::VectorFloatOperation::DIV)
+        {
+            result = alu::Alu::executeVectorFloatScalar(
+                alu::AluOp::FDIV_D,
+                id_ex_reg_.vreg1_data,
+                id_ex_reg_.freg1_data,
+                {});
+        }
+        else if (operation == vector_isa::VectorFloatOperation::FNMSAC)
+        {
+            result = alu::Alu::executeVectorFloatScalar(
+                alu::AluOp::FNMSUB_D,
+                id_ex_reg_.vreg1_data,
+                id_ex_reg_.freg1_data,
+                id_ex_reg_.vreg2_data);
+        }
+        else
+        {
+            ex_mem_reg_.pc = id_ex_reg_.pc;
+            ex_mem_reg_.instruction = instruction;
+            ex_mem_reg_.vreg_write = false;
+            return true;
+        }
+
+        ex_mem_reg_.pc = id_ex_reg_.pc;
+        ex_mem_reg_.instruction = instruction;
+        ex_mem_reg_.vector_result = result;
+        ex_mem_reg_.vrd = id_ex_reg_.vrd;
+        ex_mem_reg_.vreg_write = true;
+
+        ex_mem_reg_.reg_write = false;
+        ex_mem_reg_.freg_write = false;
+        ex_mem_reg_.mem_read = false;
+        ex_mem_reg_.mem_write = false;
+        ex_mem_reg_.mem_to_reg = false;
         return true;
     }
 
@@ -466,9 +580,14 @@ bool RV5StageVM_Base::pipeline_execute_vector()
         if (!vector_isa::isSupportedVType(instruction))
         {
             throw std::runtime_error(
-                "Unsupported vsetvli vtype: this KITES build supports e64,m1 only");
+                "Unsupported vsetvli vtype");
         }
 
+        const uint16_t vtype =
+            vector_isa::vtypeImmediate(instruction);
+        const auto config = vector_isa::decodeVType(vtype);
+        registers_.SetVectorConfig(config);
+        const size_t vlmax = vector_isa::vlmax(config);
         const uint8_t rd = vector_isa::vd(instruction);
         const uint8_t rs1 = vector_isa::vs1(instruction);
         const size_t current_vl = registers_.GetVectorLength();
@@ -479,11 +598,11 @@ bool RV5StageVM_Base::pipeline_execute_vector()
         // rs1=x0, rd!=x0 => VLMAX; rs1=x0, rd=x0 => keep current VL;
         // otherwise AVL is x[rs1], including AVL=0.
         if (rs1 == 0 && rd != 0)
-            selected_vl = vector_isa::MAX_VECTOR_LANES;
+            selected_vl = vlmax;
         else if (rs1 == 0 && rd == 0)
             selected_vl = current_vl;
         else
-            selected_vl = std::min(avl, vector_isa::MAX_VECTOR_LANES);
+            selected_vl = std::min(avl, vlmax);
 
         registers_.SetVectorLength(selected_vl);
 
@@ -520,33 +639,38 @@ bool RV5StageVM_Base::pipeline_execute_vector()
         return true;
     }
 
-    const size_t vector_length = registers_.GetVectorLength();
-
     const auto &source1 = id_ex_reg_.vreg1_data;
     const auto &source2 = id_ex_reg_.vreg2_data;
+    alu::AluOp alu_operation = alu::AluOp::NONE;
 
-    std::vector<uint64_t> result(vector_length, 0);
-
-    for (size_t lane = 0; lane < vector_length; ++lane)
+    switch (operation)
     {
-        switch (operation)
-        {
-        case vector_isa::VectorOperation::ADD:
-            result[lane] = source1.at(lane) + source2.at(lane);
-            break;
-
-        case vector_isa::VectorOperation::SUB:
-            result[lane] = source1.at(lane) - source2.at(lane);
-            break;
-
-        case vector_isa::VectorOperation::MUL:
-            result[lane] = source1.at(lane) * source2.at(lane);
-            break;
-
-        default:
-            break;
-        }
+    case vector_isa::VectorOperation::ADD:
+        alu_operation = alu::AluOp::ADD;
+        break;
+    case vector_isa::VectorOperation::SUB:
+        alu_operation = alu::AluOp::SUB;
+        break;
+    case vector_isa::VectorOperation::MUL:
+        alu_operation = alu::AluOp::MUL;
+        break;
+    default:
+        break;
     }
+
+    const auto old_values =
+        registers_.ReadVectorRegister(id_ex_reg_.vrd);
+    const bool masked =
+        vector_isa::isMaskedInstruction(instruction);
+
+    const std::vector<uint64_t> result =
+        masked
+            ? alu::Alu::executeVectorMasked(
+                  alu_operation, source1, source2,
+                  id_ex_reg_.vmask_data, old_values,
+                  registers_.GetVectorLength())
+            : alu::Alu::executeVector(
+                  alu_operation, source1, source2);
 
     // Pass the vector result to EX/MEM.
     ex_mem_reg_.pc = id_ex_reg_.pc;

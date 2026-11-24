@@ -8,6 +8,7 @@
 #define REGISTERS_H
 
 #include <QObject>
+#include "processor/vector_isa.h"
 #include <array>
 #include <string>
 #include <unordered_map>
@@ -30,6 +31,7 @@ class RegisterFile : public QObject
         vreg_ = {};
 
     size_t vector_length_ = 4;
+    vector_isa::VectorConfig vector_config_;
 
     static constexpr size_t NUM_GPR = 32; ///< Number of General-Purpose Registers (GPR).
     static constexpr size_t NUM_FPR = 32; ///< Number of Floating-Point Registers (FPR).
@@ -108,6 +110,8 @@ class RegisterFile : public QObject
     // Vector register configuration
     void SetVectorLength(size_t lanes);
     size_t GetVectorLength() const;
+    void SetVectorConfig(const vector_isa::VectorConfig& config);
+    const vector_isa::VectorConfig& GetVectorConfig() const;
 
     // Vector register access
     uint64_t ReadVectorLane(size_t reg, size_t lane) const;

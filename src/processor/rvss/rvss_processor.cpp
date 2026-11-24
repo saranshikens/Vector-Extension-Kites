@@ -203,22 +203,26 @@ void RVSSProcessor::Execute()
         // vsetvli
         if (vector_isa::isVectorConfiguration(current_instruction_))
         {
+            const uint16_t vtype =
+                vector_isa::vtypeImmediate(current_instruction_);
             if (!vector_isa::isSupportedVType(current_instruction_))
             {
                 throw std::runtime_error(
-                    "Unsupported vsetvli type. Expected e64,m1.");
+                    "Unsupported vsetvli vtype.");
             }
 
             const uint64_t avl = registers_.ReadGpr(vs1);
-
             const size_t old_vl = registers_.GetVectorLength();
+            const auto config = vector_isa::decodeVType(vtype);
+            registers_.SetVectorConfig(config);
+            const size_t vlmax = vector_isa::vlmax(config);
 
             const size_t vl = vs1 == 0
                 ? (vd == 0
                        ? old_vl
-                       : vector_isa::MAX_VECTOR_LANES)
+                       : vlmax)
                 : std::min<uint64_t>(
-                      avl, vector_isa::MAX_VECTOR_LANES);
+                      avl, vlmax);
 
             registers_.SetVectorLength(vl);
 
@@ -318,13 +322,22 @@ void RVSSProcessor::Execute()
                 break;
             }
 
-            const auto result = alu::Alu::executeVector(
-                alu_op,
-                registers_.ReadVectorRegister(vs1),
-                registers_.ReadVectorRegister(vs2));
+            const auto source1 = registers_.ReadVectorRegister(vs1);
+            const auto source2 = registers_.ReadVectorRegister(vs2);
+            const auto old_values = registers_.ReadVectorRegister(vd);
+            const bool masked =
+                vector_isa::isMaskedInstruction(current_instruction_);
+            const std::vector<uint64_t> mask =
+                masked ? registers_.ReadVectorRegister(0)
+                       : std::vector<uint64_t>{};
 
-            const auto old_values =
-                registers_.ReadVectorRegister(vd);
+            const auto result =
+                masked
+                    ? alu::Alu::executeVectorMasked(
+                          alu_op, source1, source2, mask, old_values,
+                          registers_.GetVectorLength())
+                    : alu::Alu::executeVector(
+                          alu_op, source1, source2);
 
             registers_.WriteVectorRegister(vd, result);
 
