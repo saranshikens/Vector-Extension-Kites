@@ -1,0 +1,108 @@
+RISC-V Kites Vector Test Pair Expected Outputs
+
+Arithmetic uses 64-bit modulo-2^64 semantics.
+
+01 VL=1 wrap-add:
+Input A=[0], B=[0xffffffffffffffff]. Output=[0].
+
+02 VL=2 subtract:
+A=[10,10], B=[0xffffffffffffffff,5].
+Output=[11,5].
+
+03 VL=4 multiply:
+A=[0,1,7,0xffffffffffffffff], B=[9,8,6,2].
+Output=[0,8,42,0xfffffffffffffffe].
+
+04 VL=4 dot:
+A=[1,0xffffffffffffffff,3,0xfffffffffffffffe],
+B=[5,2,4,3].
+Scalar dot result = 5 + 0xfffffffffffffffe + 12 + 0xfffffffffffffff8 = 9 modulo 2^64.
+
+05 chained add/sub/mul:
+A=[3,7,12,20], B=[1,2,3,4].
+Intermediates: A+B=[4,9,15,24], minus B=[3,7,12,20], times B=[3,14,36,80].
+
+06 VL=8 add:
+A=[1..8], B=[10,9,8,7,6,5,4,3].
+Output=[11,11,11,11,11,11,11,11].
+
+07 VL=8 subtract:
+A=[100..107], B=[0xffffffffffffffff]*8.
+Output=[101..108].
+
+08 VL=8 repeated multiplication:
+A=[7]*8, B=[0,1,1,1,1,1,1,1].
+Output=[0,7,7,7,7,7,7,7].
+
+09 VL=8 dot:
+All A lanes=0x7fffffffffffffff, all B lanes=2.
+Dot result = 8*0xffffffffffffffffe = 0xfffffffffffffff8 modulo 2^64.
+
+10 separate outputs:
+For lane i, A=[11+i], B=[5].
+Sum output=[16+i] for i=0..3.
+Product output=[80,85,90,95].
+
+11 10-element chunks:
+Output=2*[1..10]=[2,4,6,8,10,12,14,16,18,20].
+
+12 64-element add:
+Input A=[0..63], B=[1]*64.
+Output=[1..64].
+
+13 64-lane AVL cap:
+Result = 3*3=9 in every lane, with VL=64.
+
+14 repeated VL changes:
+After VL=1, VL=2, and VL=4 operations, four elements from the square result
+are [121,144,144,144] after the 4-lane square pass, with lane data initialized consistently.
+
+15 repeated load:
+Output=[36,49,64,81].
+
+16 chained arithmetic:
+For i=0..3, A=i+1 and B=i+5.
+Output=((A+B)-A)*B=B*B=[25,36,49,64].
+
+17 overflow edge:
+A=[UINT64_MAX,UINT64_MAX,0,UINT64_MAX], B=[2,2,2,2].
+A-B=[UINT64_MAX-1,UINT64_MAX-1,0xfffffffe,UINT64_MAX-1],
+times B modulo 2^64 = [UINT64_MAX-3? calculate 0xfffffffffffffffd,
+... lane2=0xfffffffffffffffC, lane3=0xfffffffffffffffd].
+
+18 sum of squared differences:
+A=[1..8], B=[9]*8.
+Each difference=-[8..1], squared=[64,49,36,25,16,9,4,1].
+Sum=204.
+
+19 squared Euclidean distance:
+A lane i=20-i, B lane i=3+i.
+Difference=17-2i, squares=[289,225,169,121,81,49,25,9], sum=968.
+
+20 multiply-and-accumulate:
+A=[2..9], B=[3]*8, accumulator=[0..7].
+Result lane=(A*3)+i=[6,7,8,9,10,11,12,13].
+Dot result=sum((A*3+i)*3) = 228.
+
+21 10-element squares:
+Input=[20..29], output=[400,441,484,529,576,625,676,729,784,841].
+
+22 4x1 matrix row dot:
+A=[1,2,3,4], B=[4,3,2,1].
+Dot=4+6+6+4=20.
+
+23 overflow:
+Inputs [UINT64_MAX,0x8000000000000000,0x7fffffffffffffff,0]
+and [1,0x8000000000000000,1,UINT64_MAX].
+Output=[0,0,0x8000000000000000,UINT64_MAX].
+
+24 alternating add/sub/mul:
+A=[UINT64_MAX]*8, B=[2]*8.
+Output A+B=[1]*8, minus A=[2]*8, times B=[4]*8.
+
+25 adjacent arrays:
+Outside-output sentinel at 0x5c20=0x123456789abcdef0.
+For i=0..3: A=i+1, B=3.
+Subtract=[i-2], multiply by 3 modulo 2^64:
+[-6,-3,0,3] represented as
+[0xfffffffffffffffA,0xfffffffffffffffd,0,3].
