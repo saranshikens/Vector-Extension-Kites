@@ -5,7 +5,7 @@ five-stage pipeline configurations, assembly/CLI support, memory simulation,
 floating-point support, and an implemented integer/vector subset.
 
 This README describes setup and usage on Windows. Linux setup is possible, but
-the supplied CMake presets use Windows Qt/MinGW paths.
+the supplied CMake presets use Windows Qt/MinGW paths. **NOTE THAT GUI WAS NOT IMPLEMENTED FOR THIS PROJECT, THEREFORE ONE MUST USE ONLY KIES CLI.**
 
 ## 1. Required tools
 
